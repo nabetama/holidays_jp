@@ -9,6 +9,8 @@ edition = "2021"
 clap = { version = "4.1.4", features = ["derive"] }
 csv = "1.1"
 encoding_rs = "0.8.32"
+chrono = "0.4.23"
+serde = { version = "1.0", features = ["derive"] }
 
 [dev-dependencies]
 assert_fs = "1.0.10"
