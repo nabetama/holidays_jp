@@ -11,5 +11,17 @@ jobs:
     name: update CSV
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions//checkout@v3
       - name: download
         run: curl -LO https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv --output ./assets/syukujitsu.csv
+      - name: commit & push changes
+        env:
+          CI_COMMIT_AUTHOR: github-actions
+          CI_COMMIT_MESSAGE: update csv from github action
+        run: |
+          git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
+          git add .
+          git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
+          git pull
+          git push origin main
