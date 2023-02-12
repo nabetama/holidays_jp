@@ -4,6 +4,7 @@ name: Regularly update the CSV file
 on:
   schedule:
     - cron: '1 2 * * 1'
+  workflow_dispatch:
 
 jobs:
   build:
