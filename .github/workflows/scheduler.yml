@@ -16,6 +16,8 @@ jobs:
       - name: download
         run: curl -LO https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv --output ./assets/syukujitsu.csv
       - name: commit & push changes
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
         env:
           CI_COMMIT_AUTHOR: github-actions
           CI_COMMIT_MESSAGE: update csv from github action
