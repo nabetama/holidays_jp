@@ -13,11 +13,19 @@ struct CliOption {
     date: String,
 }
 
+#[test]
+fn test_get_date() -> Result<(), ParseError> {
+    let dt = get_date("20230101")?;
+    assert_eq!(dt, "20230101");
+
+    Ok(())
+}
+
 fn get_date(date_arg: &str) -> Result<String, ParseError> {
     if date_arg.to_string().len() > 0 {
         match NaiveDate::parse_from_str(date_arg, "%Y%m%d") {
             Ok(dt) => {
-                return Ok(dt.to_string());
+                return Ok(dt.format("%Y%m%d").to_string());
             }
             Err(err) => return Err(err),
         }

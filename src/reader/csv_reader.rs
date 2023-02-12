@@ -3,6 +3,13 @@ use chrono::NaiveDate;
 use std::collections::HashMap;
 use std::fs;
 
+#[test]
+fn test_get_holidays() {
+    let holidays = get_holidays("assets/syukujitsu.csv").unwrap();
+
+    assert_eq!(holidays.contains_key("20230101"), true);
+}
+
 pub fn get_holidays(path: &str) -> Result<HashMap<String, String>> {
     let mut dates = HashMap::new();
 
