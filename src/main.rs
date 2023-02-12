@@ -57,10 +57,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let file = matches.get_one::<String>("file").unwrap().to_string();
     let date = get_date(matches.get_one::<String>("date").unwrap())?;
 
-    let opt = CliOption {
-        file: file,
-        date: date,
-    };
+    let opt = CliOption { file, date };
 
     let holidays = get_holidays(&opt.file)?;
 
