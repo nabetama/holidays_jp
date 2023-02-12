@@ -52,7 +52,7 @@ fn test_find_matches() {
     match get_holidays(&opt.file) {
         Ok(holidays) => {
             let mut result = Vec::new();
-            find_holiday(holidays, opt, &mut result);
+            let _ = find_holiday(holidays, opt, &mut result);
             assert_eq!(
                 result,
                 b"2023/01/01 is holiday (\xE5\x85\x83\xE6\x97\xA5)\n" // \xE5\x85\x83\xE6\x97\xA5 is "元日"

@@ -2,6 +2,7 @@ pub mod holiday;
 mod reader;
 
 use std::error::Error;
+use std::process;
 
 use clap::{arg, command};
 use holiday::holiday::{find_holiday, get_date};
@@ -41,7 +42,14 @@ fn main() -> Result<(), Box<dyn Error>> {
     let opt = CliOption { file, date };
     let holidays = get_holidays(&opt.file)?;
 
-    find_holiday(holidays, opt, &mut std::io::stdout());
+    let result = find_holiday(holidays, opt, &mut std::io::stdout());
+
+    match result {
+        Ok(_) => process::exit(0x0100),
+        Err(err) => {
+            eprintln!("{:?}", err.to_string())
+        }
+    }
 
     Ok(())
 }
