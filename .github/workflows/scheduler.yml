@@ -1,0 +1,14 @@
+name: Regularly update the CSV file
+
+
+on:
+  schedule:
+    - cron: '1 2 * * 1'
+
+jobs:
+  build:
+    name: update CSV
+    runs-on: ubuntu-latest
+    steps:
+      - name: download
+        run: curl -LO https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv --output ./assets/syukujitsu.csv
