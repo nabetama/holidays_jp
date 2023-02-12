@@ -1,53 +1,62 @@
-use chrono::NaiveDate;
-use clap::Parser;
-use std::error::Error;
-use std::fs;
+mod reader;
 
-#[derive(Debug, Parser)]
-struct Cli {
-    file: String,
-}
+use std::error::Error;
+
+use chrono::{Local, NaiveDate, ParseError};
+use clap::{arg, command};
+
+use crate::reader::csv_reader::get_holidays;
 
 #[derive(Debug)]
-#[allow(dead_code)]
-struct Holiday {
-    date: NaiveDate,
-    name: String,
+struct CliOption {
+    file: String,
+    date: String,
 }
 
-fn read_shift_jis_csv(path: &str) -> Result<Vec<Holiday>, Box<dyn Error>> {
-    // 一度 Vec で読み込む
-    let file = fs::read(path)?;
-    // SHIFT_JIS を decode -> utf8 にencodeする
-    let (res, _, _) = encoding_rs::SHIFT_JIS.decode(&file);
-    let mut rdr = csv::Reader::from_reader(res.as_bytes());
-
-    let mut holidays: Vec<Holiday> = Vec::new();
-    for record in rdr.records() {
-        let record = record?;
-
-        let holiday = Holiday {
-            date: NaiveDate::parse_from_str(&String::from(&record[0]), "%Y/%m/%d")?,
-            name: String::from(&record[1]),
-        };
-
-        holidays.push(holiday);
-    }
-
-    Ok(holidays)
-}
-
-fn main() {
-    let args = Cli::parse();
-
-    match read_shift_jis_csv(&args.file) {
-        Ok(holidays) => {
-            for holiday in holidays {
-                println!("{:?}", holiday);
+fn get_date(date_arg: &str) -> Result<String, ParseError> {
+    if date_arg.to_string().len() > 0 {
+        match NaiveDate::parse_from_str(date_arg, "%Y%m%d") {
+            Ok(dt) => {
+                return Ok(dt.to_string());
             }
-        }
-        Err(err) => {
-            println!("abnormal exit, {:?}", err.to_string())
+            Err(err) => return Err(err),
         }
     }
+    Ok(Local::now().format("%Y%m%d").to_string())
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
+    let matches = command!("Holiday")
+        .version("1.0")
+        .author("Mao Nabeta")
+        .about("Holiday is determines holiday in Japan")
+        .arg(
+            arg!(--file <FILE>)
+                .required(false)
+                .default_value("assets/syukujitsu.csv")
+                .help("csv file with list of Japanese holidays")
+                .short('f'),
+        )
+        .arg(
+            arg!(--date <DATE>)
+                .required(false)
+                .default_value("")
+                .help("a date string, such as 20230211 (%Y%m%d)")
+                .short('d'),
+        )
+        .get_matches();
+
+    let file = matches.get_one::<String>("file").unwrap().to_string();
+    let date = get_date(matches.get_one::<String>("date").unwrap())?;
+
+    let opt = CliOption {
+        file: file,
+        date: date,
+    };
+
+    if let Ok(line) = get_holidays(&opt.file) {
+        println!("{:?}", line);
+    }
+
+    Ok(())
 }
