@@ -19,7 +19,7 @@ jobs:
         env:
           CI_COMMIT_AUTHOR: github-actions
           CI_COMMIT_MESSAGE: update csv from github action
-        uses: action-js/push@master
+        uses: actions-js/push@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           author_name: ${{ env.CI_COMMIT_AUTHOR }}
