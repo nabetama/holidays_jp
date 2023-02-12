@@ -15,22 +15,22 @@ struct CliOption {
 
 #[test]
 fn test_get_date() -> Result<(), ParseError> {
-    let dt = get_date("20230101")?;
-    assert_eq!(dt, "20230101");
+    let dt = get_date("2023/01/01")?;
+    assert_eq!(dt, "2023/01/01");
 
     Ok(())
 }
 
 fn get_date(date_arg: &str) -> Result<String, ParseError> {
     if date_arg.to_string().len() > 0 {
-        match NaiveDate::parse_from_str(date_arg, "%Y%m%d") {
+        match NaiveDate::parse_from_str(date_arg, "%Y/%m/%d") {
             Ok(dt) => {
-                return Ok(dt.format("%Y%m%d").to_string());
+                return Ok(dt.format("%Y/%m/%d").to_string());
             }
             Err(err) => return Err(err),
         }
     }
-    Ok(Local::now().format("%Y%m%d").to_string())
+    Ok(Local::now().format("%Y/%m/%d").to_string())
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -49,7 +49,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             arg!(--date <DATE>)
                 .required(false)
                 .default_value("")
-                .help("a date string, such as 20230211 (%Y%m%d)")
+                .help("a date string, such as 2023/02/11 (%Y/%m/%d)")
                 .short('d'),
         )
         .get_matches();
@@ -62,8 +62,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         date: date,
     };
 
-    if let Ok(line) = get_holidays(&opt.file) {
-        println!("{:?}", line);
+    let holidays = get_holidays(&opt.file)?;
+
+    if holidays.contains_key(&opt.date) {
+        let holiday = holidays.get(&opt.date).unwrap();
+        println!("{} is holiday（{}）", opt.date, holiday);
     }
 
     Ok(())

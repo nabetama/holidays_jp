@@ -7,7 +7,7 @@ use std::fs;
 fn test_get_holidays() {
     let holidays = get_holidays("assets/syukujitsu.csv").unwrap();
 
-    assert_eq!(holidays.contains_key("20230101"), true);
+    assert_eq!(holidays.contains_key("2023/01/01"), true);
 }
 
 pub fn get_holidays(path: &str) -> Result<HashMap<String, String>> {
@@ -23,7 +23,7 @@ pub fn get_holidays(path: &str) -> Result<HashMap<String, String>> {
         let record = record?;
 
         let df = NaiveDate::parse_from_str(&String::from(&record[0]), "%Y/%m/%d")?;
-        dates.insert(df.format("%Y%m%d").to_string(), String::from(&record[1]));
+        dates.insert(df.format("%Y/%m/%d").to_string(), String::from(&record[1]));
     }
 
     Ok(dates)
