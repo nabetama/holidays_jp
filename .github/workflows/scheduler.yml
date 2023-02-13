@@ -14,7 +14,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: download
-        run: cargo run -g=true
+        run: cargo run -- -g=true
       - name: commit & push changes
         env:
           CI_COMMIT_AUTHOR: github-actions
