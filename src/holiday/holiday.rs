@@ -3,7 +3,9 @@ use std::collections::HashMap;
 
 use chrono::{Local, NaiveDate};
 
-use crate::{reader::csv_reader::get_holidays, CliOption};
+use crate::CliOption;
+
+use super::dates;
 
 #[cfg(test)]
 mod tests {
@@ -25,38 +27,12 @@ mod tests {
 
         Ok(())
     }
-
-    #[test]
-    fn test_find_matches() {
-        let opt = CliOption {
-            file: "assets/syukujitsu.csv".to_string(),
-            date: "2023/01/01".to_string(),
-        };
-
-        match get_holidays(&opt.file) {
-            Ok(holidays) => {
-                let mut result = Vec::new();
-                let _ = find_holiday(holidays, opt, &mut result);
-                assert_eq!(
-                    String::from_utf8(result).unwrap(),
-                    "2023/01/01 is holiday (元日)\n"
-                )
-            }
-            Err(err) => {
-                eprintln!("{}", err.to_string())
-            }
-        }
-    }
 }
 
 #[allow(dead_code)]
 pub fn is_holiday(dt: NaiveDate) -> bool {
-    let holidays = get_holidays("assets/syukujitsu.csv");
-    let result = match holidays {
-        Ok(holidays) => holidays.contains_key(&dt.format("%Y/%m/%d").to_string()),
-        Err(_) => false,
-    };
-    result
+    let holidays = dates::dates();
+    holidays.contains_key(&dt.format("%Y/%m/%d").to_string())
 }
 
 pub fn get_date(date_arg: &str) -> Result<String> {
