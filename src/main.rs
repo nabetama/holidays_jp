@@ -1,4 +1,4 @@
-pub mod holiday;
+mod holiday;
 mod reader;
 
 use std::error::Error;
