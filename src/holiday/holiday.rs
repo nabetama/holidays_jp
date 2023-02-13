@@ -38,8 +38,8 @@ mod tests {
                 let mut result = Vec::new();
                 let _ = find_holiday(holidays, opt, &mut result);
                 assert_eq!(
-                    result,
-                    b"2023/01/01 is holiday (\xE5\x85\x83\xE6\x97\xA5)\n" // \xE5\x85\x83\xE6\x97\xA5 is "元日"
+                    String::from_utf8(result).unwrap(),
+                    "2023/01/01 is holiday (元日)\n"
                 )
             }
             Err(err) => {
