@@ -1,5 +1,4 @@
-name: Regularly update the CSV file
-
+name: Regular update process for holiday data
 
 on:
   schedule:
@@ -8,7 +7,7 @@ on:
 
 jobs:
   build:
-    name: update CSV
+    name: update holiday data
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
