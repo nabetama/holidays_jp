@@ -7,22 +7,6 @@ use std::{
 use anyhow::Result;
 use chrono::NaiveDate;
 
-#[cfg(test)]
-mod tests {
-    use crate::holiday::generator::generate;
-
-    #[test]
-    fn test_generate() {
-        match generate() {
-            Ok(it) => it,
-            Err(err) => eprintln!("{}", err.to_string()),
-        };
-
-        assert_eq!(true, true);
-    }
-}
-
-#[warn(dead_code)]
 #[tokio::main]
 pub async fn generate() -> Result<()> {
     let body = reqwest::get("https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv")
