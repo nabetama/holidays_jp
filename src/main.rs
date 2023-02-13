@@ -1,7 +1,7 @@
-pub mod holiday;
+mod holiday;
 mod reader;
 
-use std::error::Error;
+use anyhow::Result;
 use std::process;
 
 use clap::{arg, command};
@@ -15,7 +15,7 @@ pub struct CliOption {
     date: String,
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<()> {
     let matches = command!("Holiday")
         .version("1.0")
         .author("Mao Nabeta")
