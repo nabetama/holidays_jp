@@ -14,11 +14,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: download
-        run: curl -L https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv > ./assets/syukujitsu.csv
+        run: cargo run -- -g=true
       - name: commit & push changes
         env:
           CI_COMMIT_AUTHOR: github-actions
-          CI_COMMIT_MESSAGE: update csv from github action
+          CI_COMMIT_MESSAGE: update dates.rs from github action
         uses: actions-js/push@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
