@@ -1,6 +1,7 @@
+use anyhow::Result;
 use std::collections::HashMap;
 
-use chrono::{Local, NaiveDate, ParseError};
+use chrono::{Local, NaiveDate};
 
 use crate::{reader::csv_reader::get_holidays, CliOption};
 
@@ -18,7 +19,7 @@ mod tests {
     }
 
     #[test]
-    fn test_get_date() -> Result<(), ParseError> {
+    fn test_get_date() -> Result<()> {
         let dt = get_date("2023/01/01")?;
         assert_eq!(dt, "2023/01/01");
 
@@ -58,13 +59,13 @@ pub fn is_holiday(dt: NaiveDate) -> bool {
     result
 }
 
-pub fn get_date(date_arg: &str) -> Result<String, ParseError> {
+pub fn get_date(date_arg: &str) -> Result<String> {
     if date_arg.to_string().len() > 0 {
         match NaiveDate::parse_from_str(date_arg, "%Y/%m/%d") {
             Ok(dt) => {
                 return Ok(dt.format("%Y/%m/%d").to_string());
             }
-            Err(err) => return Err(err),
+            Err(err) => return Err(err.into()),
         }
     }
     Ok(Local::now().format("%Y/%m/%d").to_string())
