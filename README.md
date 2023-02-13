@@ -3,10 +3,10 @@
 rs-holiday-ja determines Japanese holiday.
 The definition of holidays is based on this [csv file](https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv) provided by the Cabinet Office..
 
-The csv data is updated once a week from github action, but if you prefer to update it manually, run the following command
+The holiday data is updated once a week by github action, but if you prefer to update it manually, run the following command
 
 ```
-$ // TODO
+$ cargo run -- -g=true
 ```
 
 ## HOW TO USE
@@ -23,8 +23,8 @@ Holiday is determines holiday in Japan
 Usage: rs-holiday-ja [OPTIONS]
 
 Options:
-  -f, --file <FILE>  csv file with list of Japanese holidays [default: assets/syukujitsu.csv]
   -d, --date <DATE>  a date string, such as 2023/02/11 (%Y/%m/%d) [default: ]
+  -g, --gen <BOOL>   generate new syukujitsu data [possible values: true, false]
   -h, --help         Print help
   -V, --version      Print version
 ```

@@ -1,17 +1,18 @@
 mod holiday;
-mod reader;
 
 use anyhow::Result;
 use std::process;
 
-use clap::{arg, command};
-use holiday::holiday::{find_holiday, get_date};
+use clap::{arg, command, value_parser};
+use holiday::{
+    dates,
+    holiday::{find_holiday, get_date},
+};
 
-use crate::reader::csv_reader::get_holidays;
+use crate::holiday::generator::generate;
 
 #[derive(Debug)]
 pub struct CliOption {
-    file: String,
     date: String,
 }
 
@@ -21,26 +22,36 @@ fn main() -> Result<()> {
         .author("Mao Nabeta")
         .about("Holiday is determines holiday in Japan")
         .arg(
-            arg!(--file <FILE>)
-                .required(false)
-                .default_value("assets/syukujitsu.csv")
-                .help("csv file with list of Japanese holidays")
-                .short('f'),
-        )
-        .arg(
             arg!(--date <DATE>)
                 .required(false)
                 .default_value("")
                 .help("a date string, such as 2023/02/11 (%Y/%m/%d)")
                 .short('d'),
         )
+        .arg(
+            arg!(--gen <GEN>)
+                .required(false)
+                .help("generate new syukujitsu data")
+                .value_name("BOOL")
+                .value_parser(value_parser!(bool))
+                .default_missing_value("false")
+                .short('g'),
+        )
         .get_matches();
 
-    let file = matches.get_one::<String>("file").unwrap().to_string();
+    match matches.get_one::<bool>("gen") {
+        Some(_) => {
+            generate()?;
+            println!("generate process is done");
+            process::exit(0x0100);
+        }
+        None => {}
+    }
+
     let date = get_date(matches.get_one::<String>("date").unwrap())?;
 
-    let opt = CliOption { file, date };
-    let holidays = get_holidays(&opt.file)?;
+    let opt = CliOption { date };
+    let holidays = dates::dates();
 
     let result = find_holiday(holidays, opt, &mut std::io::stdout());
 
