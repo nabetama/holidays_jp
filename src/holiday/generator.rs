@@ -17,7 +17,9 @@ mod tests {
 
     #[test]
     fn test_generate() -> Result<()> {
+        const OUT_FILE: &str = "dummy.rs";
         let server = Server::run();
+
         server.expect(
             Expectation::matching(request::method_path("GET", "/dummy.csv")).respond_with(
                 status_code(200).body("dummy-title,dummy-title2\r\n2022/01/01,HOLIDAY!\r\n"),
@@ -25,9 +27,9 @@ mod tests {
         );
 
         let url = server.url("/dummy.csv");
-        generate(&url.to_string(), "dummy.rs")?;
+        generate(&url.to_string(), OUT_FILE)?;
 
-        let mut f = File::open("dummy.rs").expect("file not found");
+        let mut f = File::open(OUT_FILE).expect("file not found");
 
         let mut contents = String::new();
         f.read_to_string(&mut contents)
@@ -35,7 +37,7 @@ mod tests {
 
         assert!(contents.contains("HOLIDAY!"));
 
-        remove_file("dummy.rs")?;
+        remove_file(OUT_FILE)?;
 
         Ok(())
     }
