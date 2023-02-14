@@ -11,6 +11,9 @@ use holiday::{
 
 use crate::holiday::generator::generate;
 
+const CSV_FILE_URL: &str = "https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv";
+const OUT_FILE: &str = "./src/holiday/dates.rs";
+
 #[derive(Debug)]
 pub struct CliOption {
     date: String,
@@ -41,10 +44,7 @@ fn main() -> Result<()> {
 
     match matches.get_one::<bool>("gen") {
         Some(_) => {
-            generate(
-                "https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv",
-                "./src/holiday/dates.rs",
-            )?;
+            generate(CSV_FILE_URL, OUT_FILE)?;
             println!("generate process is done");
             process::exit(0x0100);
         }
