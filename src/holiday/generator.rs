@@ -53,12 +53,11 @@ pub async fn generate(url: &str, out_file: &str) -> Result<()> {
     let mut rdr = csv::Reader::from_reader(body.as_bytes());
 
     let header = "use std::collections::HashMap;
-    pub fn dates() -> HashMap<String, String> {
-        let res = HashMap::from([    
+    pub fn dates() -> HashMap<&'static str, &'static str> {
+        HashMap::from([    
     ";
 
-    let footer = "    ]);
-    res
+    let footer = "    ])
 }";
 
     let path = Path::new(&out_file);
