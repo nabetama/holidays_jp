@@ -32,7 +32,7 @@ mod tests {
 #[allow(dead_code)]
 pub fn is_holiday(dt: NaiveDate) -> bool {
     let holidays = dates::dates();
-    holidays.contains_key(&dt.format("%Y/%m/%d").to_string())
+    holidays.contains_key(dt.format("%Y/%m/%d").to_string().as_str())
 }
 
 pub fn get_date(date_arg: &str) -> Result<String> {
@@ -48,11 +48,11 @@ pub fn get_date(date_arg: &str) -> Result<String> {
 }
 
 pub fn find_holiday(
-    holidays: HashMap<String, String>,
+    holidays: HashMap<&str, &str>,
     opt: CliOption,
     mut writer: impl std::io::Write,
 ) -> Result<(), std::io::Error> {
-    match holidays.get(&opt.date) {
+    match holidays.get(opt.date.as_str()) {
         Some(holiday) => writeln!(writer, "{} is holiday ({})", opt.date, holiday),
         None => writeln!(writer, "{} is not holiday", opt.date),
     }

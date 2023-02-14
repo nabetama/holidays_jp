@@ -71,7 +71,7 @@ pub async fn generate(url: &str, out_file: &str) -> Result<()> {
         let dt = NaiveDate::parse_from_str(&String::from(&record[0]), "%Y/%m/%d")?;
         writeln!(
             &mut writer,
-            "(\"{}\".to_string(), \"{}\".to_string()),",
+            "(\"{}\", \"{}\"),",
             dt.format("%Y/%m/%d"),
             &record[1]
         )?;
