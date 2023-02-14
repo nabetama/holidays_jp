@@ -41,7 +41,10 @@ fn main() -> Result<()> {
 
     match matches.get_one::<bool>("gen") {
         Some(_) => {
-            generate()?;
+            generate(
+                "https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv",
+                "./src/holiday/dates.rs",
+            )?;
             println!("generate process is done");
             process::exit(0x0100);
         }
@@ -49,13 +52,10 @@ fn main() -> Result<()> {
     }
 
     let date = get_date(matches.get_one::<String>("date").unwrap())?;
-
     let opt = CliOption { date };
     let holidays = dates::dates();
 
-    let result = find_holiday(holidays, opt, &mut std::io::stdout());
-
-    match result {
+    match find_holiday(holidays, opt, &mut std::io::stdout()) {
         Ok(_) => process::exit(0x0100),
         Err(err) => {
             eprintln!("{:?}", err.to_string())
