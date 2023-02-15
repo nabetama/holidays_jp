@@ -20,10 +20,10 @@ pub struct CliOption {
 }
 
 fn main() -> Result<()> {
-    let matches = command!("Holiday")
+    let matches = command!("holiday-jp")
         .version("1.0")
         .author("Mao Nabeta")
-        .about("Holiday is determines holiday in Japan")
+        .about("holiday-jp is determines holiday in Japan")
         .arg(
             arg!(--date <DATE>)
                 .required(false)
