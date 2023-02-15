@@ -1,6 +1,6 @@
-# rs-holiday-ja
+# holiday-ja
 
-rs-holiday-ja determines Japanese holiday.
+holiday-ja determines Japanese holiday.
 The definition of holidays is based on this [csv file](https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv) provided by the Cabinet Office..
 
 The holiday data is updated once a week by github action, but if you prefer to update it manually, run the following command
@@ -14,11 +14,11 @@ $ cargo run -- -g=true
 ### When used in a terminal like the shell command
 
 ```sh
-$ rs-holiday-ja -d 2022/01/01
+$ holiday-ja -d 2022/01/01
 2022/01/01 is holiday (元日)
 
-$ rs-holiday-ja -h
-Holiday is determines holiday in Japan
+$ holiday-ja -h
+holiday-js is determines holiday in Japan
 
 Usage: rs-holiday-ja [OPTIONS]
 
