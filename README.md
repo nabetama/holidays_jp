@@ -20,7 +20,7 @@ $ holiday-ja -d 2022/01/01
 $ holiday-ja -h
 holiday-js is determines holiday in Japan
 
-Usage: rs-holiday-ja [OPTIONS]
+Usage: holiday-ja [OPTIONS]
 
 Options:
   -d, --date <DATE>  a date string, such as 2023/02/11 (%Y/%m/%d) [default: ]
