@@ -2,7 +2,7 @@ mod holiday;
 
 use anyhow::Result;
 use chrono::NaiveDate;
-use std::process;
+use std::{io::Write, process};
 
 use clap::{arg, command, value_parser};
 use holiday::holiday::{get_date, get_holiday};
@@ -23,6 +23,13 @@ const OUT_FILE: &str = "./src/holiday/dates.rs";
 pub struct CliOption {
     date: NaiveDate,
     gen: bool,
+}
+
+impl CliOption {
+    fn write(&self, write: &mut impl Write, name: &str) -> Result<()> {
+        writeln!(write, "{} is holiday({})", self.date, name)?;
+        Ok(())
+    }
 }
 
 fn main() -> Result<()> {
@@ -62,7 +69,7 @@ fn main() -> Result<()> {
     let (is_holiday, name) = get_holiday(opt.date);
 
     if is_holiday {
-        println!("{} is holiday ({})", date.to_string(), name);
+        opt.write(&mut std::io::stdout(), name)?;
     }
 
     Ok(())
