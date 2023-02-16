@@ -18,7 +18,7 @@ $ holiday_jp -d 2022/01/01
 2022/01/01 is holiday (元日)
 
 $ holiday_jp -h
-holiday-js is determines holiday in Japan
+holiday_jp is determines holiday in Japan
 
 Usage: holiday_jp [OPTIONS]
 
@@ -27,16 +27,4 @@ Options:
   -g, --gen <BOOL>   generate new syukujitsu data [possible values: true, false]
   -h, --help         Print help
   -V, --version      Print version
-```
-
-### When used as a library
-
-```rs
-fn test_is_holiday() {
-    let dt = NaiveDate::parse_from_str("2023/01/01", "%Y/%m/%d");
-    match dt {
-        Ok(dt) => assert_eq!(is_holiday(dt), true),
-        Err(err) => eprintln!("{:?}", err),
-    }
-}
 ```

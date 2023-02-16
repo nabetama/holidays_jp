@@ -2,7 +2,7 @@ pub mod holiday;
 
 use anyhow::Result;
 use chrono::NaiveDate;
-use std::{io::Write, process};
+use std::{io::Write, process, str};
 
 use clap::{arg, command, value_parser};
 use holiday::holiday::{get_date, get_holiday};
@@ -73,4 +73,26 @@ fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_output_result() -> Result<()> {
+        let opt = CliOption {
+            date: NaiveDate::parse_from_str("20230101", "%Y%m%d")?,
+            gen: false,
+        };
+
+        let mut output: Vec<u8> = Vec::new();
+
+        opt.write(&mut output, "Super Holiday!")?;
+        assert_eq!(
+            str::from_utf8(&output)?,
+            "2023-01-01 is holiday(Super Holiday!)\n"
+        );
+
+        Ok(())
+    }
 }
