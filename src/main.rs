@@ -1,13 +1,11 @@
 mod holiday;
 
 use anyhow::Result;
+use chrono::NaiveDate;
 use std::process;
 
 use clap::{arg, command, value_parser};
-use holiday::{
-    dates,
-    holiday::{find_holiday, get_date},
-};
+use holiday::holiday::{get_date, get_holiday};
 
 use crate::holiday::generator::generate;
 
@@ -23,7 +21,7 @@ const OUT_FILE: &str = "./src/holiday/dates.rs";
 /// ```
 #[derive(Debug)]
 pub struct CliOption {
-    date: String,
+    date: NaiveDate,
     gen: bool,
 }
 
@@ -61,13 +59,10 @@ fn main() -> Result<()> {
         process::exit(0x0100);
     }
 
-    let holidays = dates::dates();
+    let (is_holiday, name) = get_holiday(opt.date);
 
-    match find_holiday(holidays, opt, &mut std::io::stdout()) {
-        Ok(_) => process::exit(0x0100),
-        Err(err) => {
-            eprintln!("{:?}", err.to_string())
-        }
+    if is_holiday {
+        println!("{} is holiday ({})", date.to_string(), name);
     }
 
     Ok(())
