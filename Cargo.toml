@@ -1,5 +1,5 @@
 [package]
-name = "holiday-jp"
+name = "holiday_jp"
 version = "0.1.0"
 edition = "2021"
 

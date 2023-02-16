@@ -1,6 +1,6 @@
-# holiday-jp
+# holiday_jp
 
-holiday-jp determines Japanese holiday.
+holiday_jp determines Japanese holiday.
 The definition of holidays is based on this [csv file](https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv) provided by the Cabinet Office..
 
 The holiday data is updated once a week by github action, but if you prefer to update it manually, run the following command
@@ -14,13 +14,13 @@ $ cargo run -- -g=true
 ### When used in a terminal like the shell command
 
 ```sh
-$ holiday-jp -d 2022/01/01
+$ holiday_jp -d 2022/01/01
 2022/01/01 is holiday (元日)
 
-$ holiday-jp -h
+$ holiday_jp -h
 holiday-js is determines holiday in Japan
 
-Usage: holiday-jp [OPTIONS]
+Usage: holiday_jp [OPTIONS]
 
 Options:
   -d, --date <DATE>  a date string, such as 2023/02/11 (%Y/%m/%d) [default: ]

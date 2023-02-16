@@ -1,4 +1,4 @@
-mod holiday;
+pub mod holiday;
 
 use anyhow::Result;
 use chrono::NaiveDate;
@@ -33,10 +33,10 @@ impl CliOption {
 }
 
 fn main() -> Result<()> {
-    let matches = command!("holiday-jp")
+    let matches = command!("holiday_jp")
         .version("1.0")
         .author("Mao Nabeta")
-        .about("holiday-jp is determines holiday in Japan")
+        .about("holiday_jp is determines holiday in Japan")
         .arg(
             arg!(--date <DATE>)
                 .required(false)
