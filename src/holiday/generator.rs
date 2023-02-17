@@ -35,7 +35,7 @@ mod tests {
         f.read_to_string(&mut contents)
             .expect("something went wrong reading the file");
 
-        assert!(contents.contains("HOLIDAY!"));
+        assert!(contents.contains("\"2022-01-01\", \"HOLIDAY!\""));
 
         remove_file(OUT_FILE)?;
 
@@ -71,7 +71,7 @@ pub async fn generate(url: &str, out_file: &str) -> Result<()> {
         writeln!(
             &mut writer,
             "(\"{}\", \"{}\"),",
-            dt.format("%Y/%m/%d"),
+            dt.format("%Y-%m-%d"),
             &record[1]
         )?;
     }

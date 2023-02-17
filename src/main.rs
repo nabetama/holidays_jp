@@ -1,11 +1,10 @@
 pub mod holiday;
 
 use anyhow::Result;
-use chrono::NaiveDate;
 use std::{io::Write, process, str};
 
 use clap::{arg, command, value_parser};
-use holiday::holiday::{get_date, get_holiday};
+use holiday::holiday::get_holiday;
 
 use crate::holiday::generator::generate;
 
@@ -21,8 +20,9 @@ const OUT_FILE: &str = "./src/holiday/dates.rs";
 /// ```
 #[derive(Debug)]
 pub struct CliOption {
-    date: NaiveDate,
+    date: String,
     gen: bool,
+    date_format: String,
 }
 
 impl CliOption {
@@ -41,7 +41,7 @@ fn main() -> Result<()> {
             arg!(--date <DATE>)
                 .required(false)
                 .default_value("")
-                .help("a date string, such as 2023/02/11 (%Y/%m/%d)")
+                .help("a date string, such as 20230211 (%Y%m%d)")
                 .short('d'),
         )
         .arg(
@@ -53,12 +53,24 @@ fn main() -> Result<()> {
                 .default_missing_value("false")
                 .short('g'),
         )
+        .arg(
+            arg!(--dateformat <DATE_FORMAT>)
+                .required(false)
+                .help("Specify the date format to pass as a command line argument")
+                .default_value("%Y%m%d")
+                .short('f'),
+        )
         .get_matches();
 
-    let date = get_date(matches.get_one::<String>("date").unwrap())?;
+    let date = matches.get_one::<String>("date").unwrap().to_string();
     let gen = matches.get_one::<bool>("gen").is_some();
+    let date_format = matches.get_one::<String>("dateformat").unwrap().to_string();
 
-    let opt = CliOption { date, gen };
+    let opt = CliOption {
+        date,
+        gen,
+        date_format,
+    };
 
     if opt.gen {
         generate(CSV_FILE_URL, OUT_FILE)?;
@@ -66,7 +78,7 @@ fn main() -> Result<()> {
         process::exit(0x0100);
     }
 
-    let (is_holiday, name) = get_holiday(opt.date);
+    let (is_holiday, name) = get_holiday(&opt)?;
 
     if is_holiday {
         opt.write(&mut std::io::stdout(), name)?;
@@ -77,12 +89,14 @@ fn main() -> Result<()> {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
     #[test]
     fn test_output_result() -> Result<()> {
         let opt = CliOption {
-            date: NaiveDate::parse_from_str("20230101", "%Y%m%d")?,
+            date: "20230101".to_string(),
             gen: false,
+            date_format: "%Y%m%d".to_string(),
         };
 
         let mut output: Vec<u8> = Vec::new();
@@ -90,7 +104,7 @@ mod tests {
         opt.write(&mut output, "Super Holiday!")?;
         assert_eq!(
             str::from_utf8(&output)?,
-            "2023-01-01 is holiday(Super Holiday!)\n"
+            "20230101 is holiday(Super Holiday!)\n"
         );
 
         Ok(())
