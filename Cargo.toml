@@ -3,8 +3,13 @@ name = "holiday_jp"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
+license-file = "LICENSE"
 authors = ["Mao Nabeta <mao.nabeta@gmail.com>"]
 description = "holiday_jp determines Japanese holiday. The definition of holidays is based on csv file provided by the Cabinet Office."
+repository = "https://github.com/nabetama/holiday_jp"
+keywords = ["holilday", "Japan", "Japanese"]
+categories = ["command-line-tool"]
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
