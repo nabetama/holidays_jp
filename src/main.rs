@@ -1,3 +1,28 @@
+//! # holiday_jp
+//!
+//! A Cli tool for determines Japanese holidays.
+//! #holiday #Japan #Japanese
+//!
+//! 日本の祝日判定を行うCLIツール
+//!
+//! ## Usage
+//! ```
+//! $ ./holiday_jp -d 20220101
+//! 20220101 is holiday(元日)
+//!
+//! $ ./holiday_jp -h
+//! holiday_jp is determines holiday in Japan
+//!
+//! Usage: holiday_jp [OPTIONS]
+//!
+//! Options:
+//! -d, --date <DATE> a date string, such as 20230211 (%Y%m%d) [default: ]
+//! -g, --gen <BOOL> generate new syukujitsu data [possible values: true, false]
+//! -f, --dateformat <DATE_FORMAT> Specify the date format to pass as a command line argument [default: %Y%m%d]
+//! -h, --help Print help
+//! -V, --version Print version
+//! ```
+
 pub mod holiday;
 
 use anyhow::Result;
@@ -16,7 +41,11 @@ const OUT_FILE: &str = "./src/holiday/dates.rs";
 /// # Example
 ///
 /// ```no_run
-/// let opt = CliOption { date: "2023/01/01", gen: true };
+/// let opt = CliOption {
+///     date: "2023/01/01".to_string(),
+///     gen: true,
+///     date_format: "%Y/%m/%d".to_string()
+/// };
 /// ```
 #[derive(Debug)]
 pub struct CliOption {
@@ -26,6 +55,7 @@ pub struct CliOption {
 }
 
 impl CliOption {
+    /// wrapped `println!` macro
     fn write(&self, write: &mut impl Write, name: &str) -> Result<()> {
         writeln!(write, "{} is holiday({})", self.date, name)?;
         Ok(())
