@@ -45,8 +45,5 @@ Options:
   -V, --version                   Print version
 ```
 
-## LICENSE
-
-This library is distributed under the MIT License.See the [LICENSE](./LICENSE).
-
+## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fnabetama%2Fholidays_jp.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fnabetama%2Fholidays_jp?ref=badge_large)
