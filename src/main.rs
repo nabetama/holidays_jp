@@ -1,4 +1,4 @@
-//! # holiday_jp
+//! # holidays_jp
 //!
 //! A Cli tool for determines Japanese holidays.
 //! #holiday #Japan #Japanese
@@ -7,20 +7,18 @@
 //!
 //! ## Usage
 //! ```
-//! $ ./holiday_jp -d 20220101
-//! 20220101 is holiday(元日)
+//! $ cargo build --release
+//! $ ./target/release/holidays_jp -h
+//! holidays_jp is determines holiday in Japan
 //!
-//! $ ./holiday_jp -h
-//! holiday_jp is determines holiday in Japan
-//!
-//! Usage: holiday_jp [OPTIONS]
+//! Usage: holidays_jp [OPTIONS]
 //!
 //! Options:
-//! -d, --date <DATE> a date string, such as 20230211 (%Y%m%d) [default: ]
-//! -g, --gen <BOOL> generate new syukujitsu data [possible values: true, false]
-//! -f, --dateformat <DATE_FORMAT> Specify the date format to pass as a command line argument [default: %Y%m%d]
-//! -h, --help Print help
-//! -V, --version Print version
+//!   -d, --date <DATE>               a date string, such as 20230211 (%Y%m%d) [default: ]
+//!   -g, --gen <BOOL>                generates a new Japanese national holidays data [possible values: true, false]
+//!   -f, --dateformat <DATE_FORMAT>  Specify the date format to pass as a command line argument [default: %Y%m%d]
+//!   -h, --help                      Print help
+//!   -V, --version                   Print version
 //! ```
 
 pub mod holiday;
@@ -63,10 +61,10 @@ impl CliOption {
 }
 
 fn main() -> Result<()> {
-    let matches = command!("holiday_jp")
+    let matches = command!("holidays_jp")
         .version("1.0")
         .author("Mao Nabeta")
-        .about("holiday_jp is determines holiday in Japan")
+        .about("holidays_jp is determines holiday in Japan")
         .arg(
             arg!(--date <DATE>)
                 .required(false)
@@ -77,7 +75,7 @@ fn main() -> Result<()> {
         .arg(
             arg!(--gen <GEN>)
                 .required(false)
-                .help("generate new syukujitsu data")
+                .help("generates a new Japanese national holidays data")
                 .value_name("BOOL")
                 .value_parser(value_parser!(bool))
                 .default_missing_value("false")
