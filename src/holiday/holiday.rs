@@ -20,7 +20,7 @@ mod tests {
 
         let (ok, holiday) = get_holiday(&opt)?;
 
-        assert_eq!(ok, true);
+        assert!(ok);
         assert_eq!(holiday, "元日");
 
         Ok(())
@@ -36,7 +36,7 @@ mod tests {
 
         let (ok, holiday) = get_holiday(&opt)?;
 
-        assert_eq!(ok, false);
+        assert!(ok);
         assert_eq!(holiday, "");
 
         Ok(())
