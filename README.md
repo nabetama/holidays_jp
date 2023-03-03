@@ -10,7 +10,7 @@
 holidays_jp determines Japanese holiday.
 The definition of Japanese national holidays is based on this [csv file](https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv) provided by the Cabinet Office..
 
-The holiday data is updated once a week by github action. Thereby, holiday data is included in the repository. Therefore, this tool can be used offline.
+The holiday data is updated once a week by [github action](https://github.com/nabetama/holidays_jp/actions/workflows/scheduler.yml). Thereby, holiday data is included in the repository. Therefore, this tool can be used offline.
 If your PC is connected to the Internet, you can obtain the latest Japanese national holiday data by executing the following command.
 
 ```sh
@@ -46,4 +46,5 @@ Options:
 ```
 
 ## License
+
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fnabetama%2Fholidays_jp.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fnabetama%2Fholidays_jp?ref=badge_large)
