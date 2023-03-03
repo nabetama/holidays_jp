@@ -44,19 +44,17 @@ mod tests {
 }
 
 pub fn get_holiday(opt: &CliOption) -> Result<(bool, &'static str)> {
-    let dt: String;
-
-    if opt.date == "" {
-        dt = Local::now().format(&opt.date_format).to_string();
+    let dt: String = if opt.date.is_empty() {
+        Local::now().format(&opt.date_format).to_string()
     } else {
-        dt = NaiveDate::parse_from_str(&opt.date, &opt.date_format)?.to_string();
-    }
+        NaiveDate::parse_from_str(&opt.date, &opt.date_format)?.to_string()
+    };
 
     let holidays = dates::dates();
     let name = holidays.get(&dt.as_str());
 
     match name {
-        Some(name) => return Ok((true, name)),
-        None => return Ok((false, "")),
+        Some(name) => Ok((true, name)),
+        None => Ok((false, "")),
     }
 }

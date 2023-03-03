@@ -61,9 +61,9 @@ pub async fn generate(url: &str, out_file: &str) -> Result<()> {
 }";
 
     let path = Path::new(&out_file);
-    let mut writer = BufWriter::new(File::create(&path)?);
+    let mut writer = BufWriter::new(File::create(path)?);
 
-    write!(&mut writer, "{}", header)?;
+    write!(&mut writer, "{header}")?;
     for record in rdr.records() {
         let record = record?;
 
@@ -75,7 +75,7 @@ pub async fn generate(url: &str, out_file: &str) -> Result<()> {
             &record[1]
         )?;
     }
-    write!(&mut writer, "{}", footer)?;
+    write!(&mut writer, "{footer}")?;
     writer.flush()?;
 
     Ok(())
