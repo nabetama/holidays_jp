@@ -18,7 +18,7 @@ mod tests {
             date_format: "%Y%m%d".to_string(),
         };
 
-        let (ok, holiday) = get_holiday(&opt)?;
+        let (ok, holiday) = get_holiday(&opt);
 
         assert!(ok);
         assert_eq!(holiday, "元日");
@@ -34,27 +34,29 @@ mod tests {
             date_format: "%Y/%m/%d".to_string(),
         };
 
-        let (ok, holiday) = get_holiday(&opt)?;
+        let (ok, holiday) = get_holiday(&opt);
 
-        assert!(ok);
+        assert!(!ok);
         assert_eq!(holiday, "");
 
         Ok(())
     }
 }
 
-pub fn get_holiday(opt: &CliOption) -> Result<(bool, &'static str)> {
+pub fn get_holiday(opt: &CliOption) -> (bool, &'static str) {
     let dt: String = if opt.date.is_empty() {
         Local::now().format(&opt.date_format).to_string()
     } else {
-        NaiveDate::parse_from_str(&opt.date, &opt.date_format)?.to_string()
+        NaiveDate::parse_from_str(&opt.date, &opt.date_format)
+            .unwrap()
+            .to_string()
     };
 
     let holidays = dates::dates();
     let name = holidays.get(&dt.as_str());
 
     match name {
-        Some(name) => Ok((true, name)),
-        None => Ok((false, "")),
+        Some(name) => (true, name),
+        None => (false, ""),
     }
 }
