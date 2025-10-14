@@ -41,7 +41,6 @@ mod tests {
     fn test_get_holiday() -> Result<(), Box<dyn std::error::Error>> {
         let opt = CliOption {
             date: "20230101".to_string(),
-            gen: false,
             date_format: "%Y%m%d".to_string(),
             output_format: crate::OutputFormat::Human,
         };
@@ -58,7 +57,6 @@ mod tests {
     fn test_get_holiday_is_not_holiday() -> Result<(), Box<dyn std::error::Error>> {
         let opt = CliOption {
             date: "2023/02/02".to_string(),
-            gen: false,
             date_format: "%Y/%m/%d".to_string(),
             output_format: crate::OutputFormat::Human,
         };
@@ -84,7 +82,6 @@ mod tests {
         for (date_str, expected_holiday) in test_cases {
             let opt = CliOption {
                 date: date_str.to_string(),
-                gen: false,
                 date_format: "%Y%m%d".to_string(), // This should be ignored due to flexible parsing
                 output_format: crate::OutputFormat::Human,
             };

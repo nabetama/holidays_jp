@@ -14,7 +14,7 @@ The holiday data is updated once a week by [github action](https://github.com/na
 If your PC is connected to the Internet, you can obtain the latest Japanese national holiday data by executing the following command.
 
 ```sh
-$ cargo run -- -g=true
+$ cargo run -- update
 $ cargo fmt # dont't have to do it
 ```
 
@@ -23,26 +23,42 @@ $ cargo fmt # dont't have to do it
 ### When used in a terminal like the shell command
 
 ```sh
-# default
-$ ./holidays_jp -d 20220101
+# Check today's date (default)
+$ ./holidays_jp
+20251014 is not a holiday
+
+# Check specific date
+$ ./holidays_jp check -d 20220101
 20220101 is holiday(元日)
 
-# the date format to pass as a arg
-$ ./holidays_jp -d 2022/01/01 -f %Y/%m/%d
+# Check with different date format
+$ ./holidays_jp check -d 2022/01/01 -f %Y/%m/%d
 2022/01/01 is holiday(元日)
 
-# help
-$ ./target/release/holidays_jp -h
-holidays_jp is determines holiday in Japan
+# JSON output
+$ ./holidays_jp check -d 2022-01-01 -o json
+{"date":"2022-01-01","is_holiday":true,"holiday_name":"元日"}
 
-Usage: holidays_jp [OPTIONS]
+# Update holiday data
+$ ./holidays_jp update
+🔄 Updating holiday data from official source...
+✅ Holiday data updated successfully!
+
+# Help
+$ ./holidays_jp --help
+holidays_jp determines Japanese holidays
+
+Usage: holidays_jp [COMMAND]
+
+Commands:
+  check   Check if a specific date is a holiday (default)
+  update  Update holiday data from official source
+  list    List holidays in a date range (future feature)
+  help    Print this message or the help of the given subcommand(s)
 
 Options:
-  -d, --date <DATE>               a date string, such as 20230211 (%Y%m%d) [default: ]
-  -g, --gen <BOOL>                generates a new Japanese national holidays data [possible values: true, false]
-  -f, --dateformat <DATE_FORMAT>  Specify the date format to pass as a command line argument [default: %Y%m%d]
-  -h, --help                      Print help
-  -V, --version                   Print version
+  -h, --help     Print help
+  -V, --version  Print version
 ```
 
 ## License

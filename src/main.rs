@@ -26,7 +26,7 @@ pub mod holiday;
 use anyhow::{Result, Context};
 use std::{io::Write, process, str};
 
-use clap::{arg, command, value_parser, ValueEnum};
+use clap::{arg, command, value_parser, ValueEnum, Subcommand};
 use holiday::holiday::get_holiday;
 use chrono::Local;
 use serde_json;
@@ -71,6 +71,40 @@ enum OutputFormat {
     Quiet,
 }
 
+#[derive(Debug, Clone, Subcommand)]
+enum Commands {
+    /// Check if a specific date is a holiday (default)
+    Check {
+        /// Date to check (default: today)
+        #[arg(short, long)]
+        date: Option<String>,
+        
+        /// Date format
+        #[arg(short, long, default_value = "%Y%m%d")]
+        dateformat: String,
+        
+        /// Output format
+        #[arg(short, long, default_value = "human")]
+        output: OutputFormat,
+    },
+    /// Update holiday data from official source
+    Update,
+    /// List holidays in a date range (future feature)
+    List {
+        /// Start date
+        #[arg(short, long)]
+        start: Option<String>,
+        
+        /// End date
+        #[arg(short, long)]
+        end: Option<String>,
+        
+        /// Output format
+        #[arg(short, long, default_value = "human")]
+        output: OutputFormat,
+    },
+}
+
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 struct HolidayResult {
     date: String,
@@ -93,7 +127,6 @@ struct HolidayResult {
 #[derive(Debug)]
 pub struct CliOption {
     date: String,
-    gen: bool,
     date_format: String,
     output_format: OutputFormat,
 }
@@ -139,66 +172,114 @@ fn run() -> Result<()> {
     let matches = command!("holidays_jp")
         .version("1.0")
         .author("Mao Nabeta")
-        .about("holidays_jp is determines holiday in Japan")
-        .arg(
-            arg!(--date <DATE>)
-                .required(false)
-                .help("a date string, such as 20230211 (%Y%m%d) [default: today]")
-                .short('d'),
+        .about("holidays_jp determines Japanese holidays")
+        .subcommand_required(false)
+        .arg_required_else_help(false)
+        .subcommand(
+            command!("check")
+                .about("Check if a specific date is a holiday (default)")
+                .arg(
+                    arg!(--date <DATE>)
+                        .help("Date to check (default: today)")
+                        .short('d'),
+                )
+                .arg(
+                    arg!(--dateformat <DATE_FORMAT>)
+                        .help("Date format")
+                        .default_value("%Y%m%d")
+                        .short('f'),
+                )
+                .arg(
+                    arg!(--output <OUTPUT_FORMAT>)
+                        .help("Output format")
+                        .value_parser(value_parser!(OutputFormat))
+                        .default_value("human")
+                        .short('o'),
+                ),
         )
-        .arg(
-            arg!(--gen <GEN>)
-                .required(false)
-                .help("generates a new Japanese national holidays data")
-                .value_name("BOOL")
-                .value_parser(value_parser!(bool))
-                .default_missing_value("false")
-                .short('g'),
+        .subcommand(
+            command!("update")
+                .about("Update holiday data from official source"),
         )
-        .arg(
-            arg!(--dateformat <DATE_FORMAT>)
-                .required(false)
-                .help("Specify the date format to pass as a command line argument")
-                .default_value("%Y%m%d")
-                .short('f'),
-        )
-        .arg(
-            arg!(--output <OUTPUT_FORMAT>)
-                .required(false)
-                .help("Output format")
-                .value_parser(value_parser!(OutputFormat))
-                .default_value("human")
-                .short('o'),
+        .subcommand(
+            command!("list")
+                .about("List holidays in a date range (future feature)")
+                .arg(
+                    arg!(--start <START_DATE>)
+                        .help("Start date")
+                        .short('s'),
+                )
+                .arg(
+                    arg!(--end <END_DATE>)
+                        .help("End date")
+                        .short('e'),
+                )
+                .arg(
+                    arg!(--output <OUTPUT_FORMAT>)
+                        .help("Output format")
+                        .value_parser(value_parser!(OutputFormat))
+                        .default_value("human")
+                        .short('o'),
+                ),
         )
         .get_matches();
 
-    let date = matches.get_one::<String>("date")
-        .map(|s| s.to_string())
-        .unwrap_or_else(|| Local::now().format("%Y%m%d").to_string());
-    let gen = matches.get_one::<bool>("gen").is_some();
-    let date_format = matches.get_one::<String>("dateformat").unwrap().to_string();
-    let output_format = matches.get_one::<OutputFormat>("output").unwrap().clone();
+    match matches.subcommand() {
+        Some(("check", sub_matches)) => {
+            let date = sub_matches.get_one::<String>("date")
+                .map(|s| s.to_string())
+                .unwrap_or_else(|| Local::now().format("%Y%m%d").to_string());
+            let date_format = sub_matches.get_one::<String>("dateformat").unwrap().to_string();
+            let output_format = sub_matches.get_one::<OutputFormat>("output").unwrap().clone();
 
-    let opt = CliOption {
-        date,
-        gen,
-        date_format,
-        output_format,
-    };
+            let opt = CliOption {
+                date,
+                date_format,
+                output_format,
+            };
 
-    if opt.gen {
-        println!("🔄 Generating holiday data from official source...");
-        generate(CSV_FILE_URL, OUT_FILE)
-            .context("Failed to generate holiday data. Please check your internet connection and try again.")?;
-        println!("✅ Holiday data generation completed successfully!");
-        return Ok(());
+            let (is_holiday, name) = get_holiday(&opt)
+                .context("Failed to check holiday status. Please verify your date format.")?;
+
+            opt.write_result(&mut std::io::stdout(), is_holiday, if name.is_empty() { None } else { Some(name) })
+                .context("Failed to write output. Please check your terminal settings.")?;
+        }
+        Some(("update", _)) => {
+            println!("🔄 Updating holiday data from official source...");
+            generate(CSV_FILE_URL, OUT_FILE)
+                .context("Failed to update holiday data. Please check your internet connection and try again.")?;
+            println!("✅ Holiday data updated successfully!");
+        }
+        Some(("list", sub_matches)) => {
+            let start = sub_matches.get_one::<String>("start");
+            let end = sub_matches.get_one::<String>("end");
+            let _output_format = sub_matches.get_one::<OutputFormat>("output").unwrap().clone();
+            
+            if start.is_none() || end.is_none() {
+                eprintln!("❌ Error: Both --start and --end dates are required for list command");
+                eprintln!("💡 Example: ./holidays_jp list --start 2023-01-01 --end 2023-12-31");
+                return Ok(());
+            }
+            
+            eprintln!("⚠️  List command is not yet implemented. This is a placeholder for future functionality.");
+            eprintln!("💡 For now, use: ./holidays_jp check --date <DATE>");
+        }
+        None => {
+            // Default behavior: check today's date
+            let opt = CliOption {
+                date: Local::now().format("%Y%m%d").to_string(),
+                date_format: "%Y%m%d".to_string(),
+                output_format: OutputFormat::Human,
+            };
+
+            let (is_holiday, name) = get_holiday(&opt)
+                .context("Failed to check holiday status. Please verify your date format.")?;
+
+            opt.write_result(&mut std::io::stdout(), is_holiday, if name.is_empty() { None } else { Some(name) })
+                .context("Failed to write output. Please check your terminal settings.")?;
+        }
+        _ => unreachable!(),
     }
-
-    let (is_holiday, name) = get_holiday(&opt)
-        .context("Failed to check holiday status. Please verify your date format.")?;
-
-    opt.write_result(&mut std::io::stdout(), is_holiday, if name.is_empty() { None } else { Some(name) })
-        .context("Failed to write output. Please check your terminal settings.")?;
 
     Ok(())
 }
@@ -211,7 +292,6 @@ mod tests {
     fn test_output_result() -> Result<()> {
         let opt = CliOption {
             date: "20230101".to_string(),
-            gen: false,
             date_format: "%Y%m%d".to_string(),
             output_format: OutputFormat::Human,
         };
@@ -231,7 +311,6 @@ mod tests {
     fn test_json_output() -> Result<()> {
         let opt = CliOption {
             date: "20230101".to_string(),
-            gen: false,
             date_format: "%Y%m%d".to_string(),
             output_format: OutputFormat::Json,
         };
