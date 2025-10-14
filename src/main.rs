@@ -109,7 +109,7 @@ fn main() -> Result<()> {
         process::exit(0x0100);
     }
 
-    let (is_holiday, name) = get_holiday(&opt);
+    let (is_holiday, name) = get_holiday(&opt)?;
 
     if is_holiday {
         opt.write(&mut std::io::stdout(), name)?;
