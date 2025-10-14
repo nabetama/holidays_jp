@@ -32,7 +32,6 @@ use std::{io::Write, process, str};
 use clap::{arg, command, value_parser, ValueEnum};
 use holiday_service::HolidayService;
 use serde_json;
-use constants::*;
 
 /// Print user-friendly error message with usage examples
 fn print_error_with_help(error: &anyhow::Error) {
