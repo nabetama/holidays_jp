@@ -45,29 +45,28 @@ cargo install holidays_jp
 If your PC is connected to the Internet, you can obtain the latest Japanese national holiday data by executing the following command.
 
 ```sh
-$ cargo run -- update
+cargo run -- update
 ```
 
-##
 ```sh
 # Check today's date (default behavior)
-$ ./holidays_jp
+holidays_jp
 20251014 is not a holiday
 
 # Check a specific date
-$ ./holidays_jp check -d 20220101
+holidays_jp check -d 20220101
 20220101 is holiday(元日)
 
 # Check with different date format
-$ ./holidays_jp check -d 2022/01/01
+holidays_jp check -d 2022/01/01
 2022/01/01 is holiday(元日)
 
 # JSON output for scripting
-$ ./holidays_jp check -d 2022-01-01 -o json
+holidays_jp check -d 2022-01-01 -o json
 {"date":"2022-01-01","is_holiday":true,"holiday_name":"元日"}
 
 # Quiet output (holiday name only)
-$ ./holidays_jp check -d 2022-01-01 -o quiet
+holidays_jp check -d 2022-01-01 -o quiet
 元日
 ```
 
@@ -75,14 +74,14 @@ $ ./holidays_jp check -d 2022-01-01 -o quiet
 
 ```sh
 # List holidays in January 2023
-$ ./holidays_jp list --start 2023-01-01 --end 2023-01-31
+holidays_jp list --start 2023-01-01 --end 2023-01-31
 Holidays in range (2023-01-01 to 2023-01-31):
   2023-01-01 - 元日
   2023-01-02 - 休日
   2023-01-09 - 成人の日
 
 # JSON output for programmatic use
-$ ./holidays_jp list --start 2023-01-01 --end 2023-01-31 -o json
+holidays_jp list --start 2023-01-01 --end 2023-01-31 -o json
 {
   "start_date": "2023-01-01",
   "end_date": "2023-01-31",
@@ -106,14 +105,14 @@ $ ./holidays_jp list --start 2023-01-01 --end 2023-01-31 -o json
 }
 
 # List all holidays in 2023
-$ ./holidays_jp list --start 2023/01/01 --end 2023/12/31
+holidays_jp list --start 2023/01/01 --end 2023/12/31
 ```
 
 ### Update Holiday Data
 
 ```sh
 # Update to the latest holiday data
-$ ./holidays_jp update
+holidays_jp update
 🔄 Updating holiday data from official source...
 ✅ Holiday data updated successfully!
 ```
@@ -122,12 +121,12 @@ $ ./holidays_jp update
 
 ```sh
 # General help
-$ ./holidays_jp --help
+holidays_jp --help
 
 # Command-specific help
-$ ./holidays_jp check --help
-$ ./holidays_jp list --help
-$ ./holidays_jp update --help
+holidays_jp check --help
+holidays_jp list --help
+holidays_jp update --help
 ```
 
 ## Supported Date Formats
