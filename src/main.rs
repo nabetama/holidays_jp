@@ -85,12 +85,11 @@ fn main() {
 
 #[tokio::main]
 async fn run() -> Result<()> {
-    // 設定を読み込み
     let config = config::Config::load()?;
 
-    let matches = command!(APP_NAME)
-        .version(APP_VERSION)
-        .author(APP_AUTHOR)
+    let matches = command!(env!("CARGO_PKG_NAME"))
+        .version(env!("CARGO_PKG_VERSION"))
+        .author(env!("CARGO_PKG_AUTHORS"))
         .about("A CLI tool for determining Japanese national holidays")
         .long_about("holidays_jp is a command-line tool that helps you check if specific dates are Japanese national holidays. It supports multiple date formats, various output formats, and can list holidays within a date range. The holiday data is based on the official CSV file provided by the Cabinet Office of Japan.")
         .subcommand_required(false)

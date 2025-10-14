@@ -3,11 +3,6 @@
 //! These are values that should never change and don't belong in config files.
 //! All user-configurable values are defined in config.toml.
 
-/// Application metadata (not user-configurable)
-pub const APP_NAME: &str = "holidays_jp";
-pub const APP_VERSION: &str = "1.0";
-pub const APP_AUTHOR: &str = "Mao Nabeta";
-
 /// Configuration file name
 pub const CONFIG_FILE_NAME: &str = "config.toml";
 
@@ -31,6 +26,6 @@ pub const CACHE_STRATEGY_OPTIONS: &[&str] = &[
     "NeverRefresh",
 ];
 
-/// Default configuration values (used only when creating initial config.toml)
+/// Default configuration values (used by Config::default() and when creating initial config.toml)
 pub const DEFAULT_SOURCE_URL: &str = "https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv";
 pub const DEFAULT_CACHE_FILE: &str = "./data/holidays.json";

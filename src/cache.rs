@@ -9,11 +9,8 @@ use std::path::PathBuf;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CacheMetadata {
     pub last_updated: DateTime<Utc>,
-    pub source_url: String,
     pub etag: Option<String>,
-    pub last_modified: Option<String>,
-    pub version: String,
-    pub cache_duration_hours: u64,
+    pub last_etag_check: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -25,34 +22,34 @@ pub struct CacheData {
 pub struct HolidayCache {
     config: Config,
     cache_path: PathBuf,
+    http_client: reqwest::Client,
 }
 
 impl HolidayCache {
     pub fn new(config: Config) -> Self {
         let cache_path = PathBuf::from(&config.holiday_data.cache_file);
-        Self { config, cache_path }
+        let http_client = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(30))
+            .build()
+            .expect("Failed to create HTTP client");
+        Self { config, cache_path, http_client }
     }
 
     pub async fn get_holidays(&self) -> Result<HashMap<String, String>> {
         if self.config.cache.force_refresh_on_startup {
-            println!("🔄 Force refresh enabled, downloading fresh data...");
             return self.download_and_cache().await;
         }
 
         if !self.cache_path.exists() {
-            println!("📥 No cache file found, downloading data...");
             return self.download_and_cache().await;
         }
 
         let cache_data = self.load_cache_data()?;
-        
+
         if self.should_refresh_cache(&cache_data.metadata).await? {
-            println!("🔄 Cache is stale, downloading fresh data...");
             return self.download_and_cache().await;
         }
 
-        // 5. キャッシュから読み込み
-        println!("✅ Using cached holiday data");
         Ok(cache_data.holidays)
     }
 
@@ -67,78 +64,31 @@ impl HolidayCache {
     }
 
     async fn should_refresh_cache(&self, metadata: &CacheMetadata) -> Result<bool> {
-        println!("🔍 Checking cache freshness...");
-        println!("   Last updated: {}", metadata.last_updated);
-        println!("   Cache age: {} hours", self.get_cache_age_hours(metadata));
-        println!("   Strategy: {:?}", self.config.cache.strategy);
-
         match &self.config.cache.strategy {
-            CacheStrategy::AlwaysRefresh => {
-                println!("   ⚡ Force refresh enabled");
-                Ok(true)
-            }
-            
-            CacheStrategy::NeverRefresh => {
-                println!("   🔒 Cache refresh disabled");
-                Ok(false)
-            }
-            
-            CacheStrategy::TimeBased => {
-                self.should_refresh_time_based(metadata)
-            }
-            
-            CacheStrategy::EtagBased => {
-                self.should_refresh_etag_based(metadata).await
-            }
-            
-            CacheStrategy::Hybrid => {
-                self.should_refresh_hybrid(metadata).await
-            }
+            CacheStrategy::AlwaysRefresh => Ok(true),
+            CacheStrategy::NeverRefresh => Ok(false),
+            CacheStrategy::TimeBased => self.should_refresh_time_based(metadata),
+            CacheStrategy::EtagBased => self.should_refresh_etag_based(metadata).await,
+            CacheStrategy::Hybrid => self.should_refresh_hybrid(metadata).await,
         }
     }
 
     fn should_refresh_time_based(&self, metadata: &CacheMetadata) -> Result<bool> {
         let cache_age_hours = self.get_cache_age_hours(metadata);
         let max_age_hours = self.config.cache.max_age_hours;
-        
-        let should_refresh = cache_age_hours > max_age_hours;
-        
-        if should_refresh {
-            println!("   ⏰ Cache expired ({}h > {}h)", cache_age_hours, max_age_hours);
-        } else {
-            println!("   ✅ Cache is fresh ({}h <= {}h)", cache_age_hours, max_age_hours);
-        }
-        
-        Ok(should_refresh)
+        Ok(cache_age_hours > max_age_hours)
     }
 
     async fn should_refresh_etag_based(&self, metadata: &CacheMetadata) -> Result<bool> {
         if metadata.etag.is_none() {
-            println!("   ⚠️  No ETag available, falling back to time-based check");
             return self.should_refresh_time_based(metadata);
         }
 
         match self.check_remote_etag().await {
             Ok(Some(remote_etag)) => {
-                let should_refresh = metadata.etag.as_ref() != Some(&remote_etag);
-                
-                if should_refresh {
-                    println!("   🔄 ETag changed: {} -> {}", 
-                        metadata.etag.as_deref().unwrap_or("None"), 
-                        remote_etag
-                    );
-                } else {
-                    println!("   ✅ ETag unchanged: {}", remote_etag);
-                }
-                
-                Ok(should_refresh)
+                Ok(metadata.etag.as_ref() != Some(&remote_etag))
             }
-            Ok(None) => {
-                println!("   ⚠️  No ETag from server, using time-based check");
-                self.should_refresh_time_based(metadata)
-            }
-            Err(e) => {
-                println!("   ❌ Failed to check ETag: {}, using time-based check", e);
+            Ok(None) | Err(_) => {
                 self.should_refresh_time_based(metadata)
             }
         }
@@ -146,20 +96,26 @@ impl HolidayCache {
 
     async fn should_refresh_hybrid(&self, metadata: &CacheMetadata) -> Result<bool> {
         let cache_age_hours = self.get_cache_age_hours(metadata);
-        
+
+        // Force refresh if cache is too old
         if cache_age_hours > self.config.cache.max_age_hours {
-            println!("   ⏰ Cache too old ({}h > {}h), forcing refresh", 
-                cache_age_hours, self.config.cache.max_age_hours);
             return Ok(true);
         }
-        
-        if cache_age_hours > self.config.cache.etag_check_interval_hours {
-            println!("   🔍 ETag check interval reached ({}h > {}h)", 
-                cache_age_hours, self.config.cache.etag_check_interval_hours);
+
+        // Check if we should perform an ETag check
+        let should_check_etag = match metadata.last_etag_check {
+            Some(last_check) => {
+                let hours_since_check = (Utc::now() - last_check).num_hours() as u64;
+                hours_since_check > self.config.cache.etag_check_interval_hours
+            }
+            None => true, // Never checked, do it now
+        };
+
+        if should_check_etag {
+            // Perform ETag check and update timestamp
             return self.should_refresh_etag_based(metadata).await;
         }
-        
-        println!("   ✅ Cache is fresh, no refresh needed");
+
         Ok(false)
     }
 
@@ -170,21 +126,18 @@ impl HolidayCache {
     }
 
     async fn check_remote_etag(&self) -> Result<Option<String>> {
-        let client = reqwest::Client::builder()
-            .timeout(std::time::Duration::from_secs(10))
-            .build()?;
-        
-        let response = client
+        let response = self.http_client
             .head(&self.config.holiday_data.source_url)
+            .timeout(std::time::Duration::from_secs(10))
             .send()
             .await?;
-        
+
         if response.status().is_success() {
             let etag = response.headers()
                 .get("etag")
                 .and_then(|h| h.to_str().ok())
                 .map(|s| s.to_string());
-            
+
             Ok(etag)
         } else {
             Err(anyhow::anyhow!("HTTP error: {}", response.status()))
@@ -192,17 +145,11 @@ impl HolidayCache {
     }
 
     async fn download_and_cache(&self) -> Result<HashMap<String, String>> {
-        println!("📥 Downloading holiday data from: {}", self.config.holiday_data.source_url);
-        
-        let client = reqwest::Client::builder()
-            .timeout(std::time::Duration::from_secs(30))
-            .build()?;
-        
-        let response = client
+        let response = self.http_client
             .get(&self.config.holiday_data.source_url)
             .send()
             .await?;
-        
+
         if !response.status().is_success() {
             return Err(anyhow::anyhow!("Failed to download data: {}", response.status()));
         }
@@ -212,28 +159,21 @@ impl HolidayCache {
             .and_then(|h| h.to_str().ok())
             .map(|s| s.to_string());
 
-        let last_modified = response.headers()
-            .get("last-modified")
-            .and_then(|h| h.to_str().ok())
-            .map(|s| s.to_string());
-
         let body = response.text_with_charset("shift-jis").await?;
         let holidays = self.parse_csv(&body)?;
 
-        // キャッシュディレクトリを作成
+        // Create cache directory if needed
         if let Some(parent) = self.cache_path.parent() {
             std::fs::create_dir_all(parent)?;
         }
 
-        // キャッシュに保存
+        // Save to cache
+        let now = Utc::now();
         let cache_data = CacheData {
             metadata: CacheMetadata {
-                last_updated: Utc::now(),
-                source_url: self.config.holiday_data.source_url.clone(),
+                last_updated: now,
                 etag,
-                last_modified,
-                version: "1.0".to_string(),
-                cache_duration_hours: self.config.cache.max_age_hours,
+                last_etag_check: Some(now),
             },
             holidays: holidays.clone(),
         };
@@ -241,7 +181,6 @@ impl HolidayCache {
         let json = serde_json::to_string_pretty(&cache_data)?;
         std::fs::write(&self.cache_path, json)?;
 
-        println!("✅ Holiday data cached successfully");
         Ok(holidays)
     }
 
