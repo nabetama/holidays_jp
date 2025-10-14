@@ -172,26 +172,31 @@ fn run() -> Result<()> {
     let matches = command!("holidays_jp")
         .version("1.0")
         .author("Mao Nabeta")
-        .about("holidays_jp determines Japanese holidays")
+        .about("A CLI tool for determining Japanese national holidays")
+        .long_about("holidays_jp is a command-line tool that helps you check if specific dates are Japanese national holidays. It supports multiple date formats, various output formats, and can list holidays within a date range. The holiday data is based on the official CSV file provided by the Cabinet Office of Japan.")
         .subcommand_required(false)
         .arg_required_else_help(false)
         .subcommand(
             command!("check")
                 .about("Check if a specific date is a holiday (default)")
+                .long_about("Check whether a specific date is a Japanese national holiday. If no date is specified, today's date will be checked. Supports multiple date formats and output formats.")
                 .arg(
                     arg!(--date <DATE>)
                         .help("Date to check (default: today)")
+                        .long_help("The date to check for holidays. Supports various formats: YYYYMMDD, YYYY-MM-DD, YYYY/MM/DD, YYYY年MM月DD日, etc.")
                         .short('d'),
                 )
                 .arg(
                     arg!(--dateformat <DATE_FORMAT>)
-                        .help("Date format")
+                        .help("Date format for parsing the input date")
+                        .long_help("Specify the format of the input date. This is used as a fallback when automatic format detection fails. Default: %Y%m%d")
                         .default_value("%Y%m%d")
                         .short('f'),
                 )
                 .arg(
                     arg!(--output <OUTPUT_FORMAT>)
                         .help("Output format")
+                        .long_help("Choose how to display the result: human (readable), json (structured), or quiet (minimal)")
                         .value_parser(value_parser!(OutputFormat))
                         .default_value("human")
                         .short('o'),
@@ -199,24 +204,29 @@ fn run() -> Result<()> {
         )
         .subcommand(
             command!("update")
-                .about("Update holiday data from official source"),
+                .about("Update holiday data from official source")
+                .long_about("Download the latest Japanese national holiday data from the official Cabinet Office CSV file and update the local database. This command requires an internet connection."),
         )
         .subcommand(
             command!("list")
-                .about("List holidays in a date range (future feature)")
+                .about("List holidays in a date range")
+                .long_about("List all Japanese national holidays within a specified date range. Both start and end dates are required. Supports multiple date formats and output formats.")
                 .arg(
                     arg!(--start <START_DATE>)
-                        .help("Start date")
+                        .help("Start date of the range")
+                        .long_help("The start date of the range to search for holidays. Supports various formats: YYYYMMDD, YYYY-MM-DD, YYYY/MM/DD, YYYY年MM月DD日, etc.")
                         .short('s'),
                 )
                 .arg(
                     arg!(--end <END_DATE>)
-                        .help("End date")
+                        .help("End date of the range")
+                        .long_help("The end date of the range to search for holidays. Supports various formats: YYYYMMDD, YYYY-MM-DD, YYYY/MM/DD, YYYY年MM月DD日, etc.")
                         .short('e'),
                 )
                 .arg(
                     arg!(--output <OUTPUT_FORMAT>)
                         .help("Output format")
+                        .long_help("Choose how to display the results: human (readable list), json (structured data), or quiet (minimal format)")
                         .value_parser(value_parser!(OutputFormat))
                         .default_value("human")
                         .short('o'),
