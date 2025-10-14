@@ -26,14 +26,32 @@ pub mod holiday;
 use anyhow::Result;
 use std::{io::Write, process, str};
 
-use clap::{arg, command, value_parser};
+use clap::{arg, command, value_parser, ValueEnum};
 use holiday::holiday::get_holiday;
 use chrono::Local;
+use serde_json;
 
 use crate::holiday::generator::generate;
 
 const CSV_FILE_URL: &str = "https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv";
 const OUT_FILE: &str = "./src/holiday/dates.rs";
+
+#[derive(Debug, Clone, ValueEnum)]
+enum OutputFormat {
+    /// Human-readable format (default)
+    Human,
+    /// JSON format
+    Json,
+    /// Quiet format (only show holiday name, nothing for non-holidays)
+    Quiet,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+struct HolidayResult {
+    date: String,
+    is_holiday: bool,
+    holiday_name: Option<String>,
+}
 
 
 /// A struct with command line arguments for CLI
@@ -52,12 +70,35 @@ pub struct CliOption {
     date: String,
     gen: bool,
     date_format: String,
+    output_format: OutputFormat,
 }
 
 impl CliOption {
-    /// wrapped `println!` macro
-    fn write(&self, write: &mut impl Write, name: &str) -> Result<()> {
-        writeln!(write, "{} is holiday({})", self.date, name)?;
+    /// Write holiday result based on output format
+    fn write_result(&self, write: &mut impl Write, is_holiday: bool, holiday_name: Option<&str>) -> Result<()> {
+        match self.output_format {
+            OutputFormat::Human => {
+                if is_holiday {
+                    writeln!(write, "{} is holiday({})", self.date, holiday_name.unwrap_or(""))?;
+                } else {
+                    writeln!(write, "{} is not a holiday", self.date)?;
+                }
+            }
+            OutputFormat::Json => {
+                let result = HolidayResult {
+                    date: self.date.clone(),
+                    is_holiday,
+                    holiday_name: holiday_name.map(|s| s.to_string()),
+                };
+                writeln!(write, "{}", serde_json::to_string(&result)?)?;
+            }
+            OutputFormat::Quiet => {
+                if is_holiday {
+                    writeln!(write, "{}", holiday_name.unwrap_or(""))?;
+                }
+                // For quiet mode, don't output anything for non-holidays
+            }
+        }
         Ok(())
     }
 }
@@ -89,6 +130,14 @@ fn main() -> Result<()> {
                 .default_value("%Y%m%d")
                 .short('f'),
         )
+        .arg(
+            arg!(--output <OUTPUT_FORMAT>)
+                .required(false)
+                .help("Output format")
+                .value_parser(value_parser!(OutputFormat))
+                .default_value("human")
+                .short('o'),
+        )
         .get_matches();
 
     let date = matches.get_one::<String>("date")
@@ -96,11 +145,13 @@ fn main() -> Result<()> {
         .unwrap_or_else(|| Local::now().format("%Y%m%d").to_string());
     let gen = matches.get_one::<bool>("gen").is_some();
     let date_format = matches.get_one::<String>("dateformat").unwrap().to_string();
+    let output_format = matches.get_one::<OutputFormat>("output").unwrap().clone();
 
     let opt = CliOption {
         date,
         gen,
         date_format,
+        output_format,
     };
 
     if opt.gen {
@@ -111,9 +162,7 @@ fn main() -> Result<()> {
 
     let (is_holiday, name) = get_holiday(&opt)?;
 
-    if is_holiday {
-        opt.write(&mut std::io::stdout(), name)?;
-    }
+    opt.write_result(&mut std::io::stdout(), is_holiday, if name.is_empty() { None } else { Some(name) })?;
 
     Ok(())
 }
@@ -128,15 +177,38 @@ mod tests {
             date: "20230101".to_string(),
             gen: false,
             date_format: "%Y%m%d".to_string(),
+            output_format: OutputFormat::Human,
         };
 
         let mut output: Vec<u8> = Vec::new();
 
-        opt.write(&mut output, "Super Holiday!")?;
+        opt.write_result(&mut output, true, Some("Super Holiday!"))?;
         assert_eq!(
             str::from_utf8(&output)?,
             "20230101 is holiday(Super Holiday!)\n"
         );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_json_output() -> Result<()> {
+        let opt = CliOption {
+            date: "20230101".to_string(),
+            gen: false,
+            date_format: "%Y%m%d".to_string(),
+            output_format: OutputFormat::Json,
+        };
+
+        let mut output: Vec<u8> = Vec::new();
+
+        opt.write_result(&mut output, true, Some("元日"))?;
+        let json_str = str::from_utf8(&output)?;
+        let result: HolidayResult = serde_json::from_str(json_str.trim())?;
+        
+        assert_eq!(result.date, "20230101");
+        assert!(result.is_holiday);
+        assert_eq!(result.holiday_name, Some("元日".to_string()));
 
         Ok(())
     }

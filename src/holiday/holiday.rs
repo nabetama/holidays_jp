@@ -43,6 +43,7 @@ mod tests {
             date: "20230101".to_string(),
             gen: false,
             date_format: "%Y%m%d".to_string(),
+            output_format: crate::OutputFormat::Human,
         };
 
         let (ok, holiday) = get_holiday(&opt)?;
@@ -59,6 +60,7 @@ mod tests {
             date: "2023/02/02".to_string(),
             gen: false,
             date_format: "%Y/%m/%d".to_string(),
+            output_format: crate::OutputFormat::Human,
         };
 
         let (ok, holiday) = get_holiday(&opt)?;
@@ -84,6 +86,7 @@ mod tests {
                 date: date_str.to_string(),
                 gen: false,
                 date_format: "%Y%m%d".to_string(), // This should be ignored due to flexible parsing
+                output_format: crate::OutputFormat::Human,
             };
 
             let (ok, holiday) = get_holiday(&opt)?;
