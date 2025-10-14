@@ -4,7 +4,7 @@ use std::{
     path::Path,
 };
 
-use anyhow::Result;
+use anyhow::{Result, Context};
 use chrono::NaiveDate;
 
 #[cfg(test)]
@@ -46,9 +46,11 @@ mod tests {
 #[tokio::main]
 pub async fn generate(url: &str, out_file: &str) -> Result<()> {
     let body = reqwest::get(url)
-        .await?
+        .await
+        .context("Failed to connect to the official holiday data source. Please check your internet connection.")?
         .text_with_charset("shift-jis")
-        .await?;
+        .await
+        .context("Failed to download holiday data. The server might be temporarily unavailable.")?;
 
     let mut rdr = csv::Reader::from_reader(body.as_bytes());
 
@@ -61,22 +63,30 @@ pub async fn generate(url: &str, out_file: &str) -> Result<()> {
 }";
 
     let path = Path::new(&out_file);
-    let mut writer = BufWriter::new(File::create(path)?);
+    let mut writer = BufWriter::new(File::create(path)
+        .context("Failed to create output file. Please check write permissions.")?);
 
-    write!(&mut writer, "{header}")?;
+    write!(&mut writer, "{header}")
+        .context("Failed to write file header.")?;
+    
     for record in rdr.records() {
-        let record = record?;
+        let record = record
+            .context("Failed to parse CSV record. The data format might have changed.")?;
 
-        let dt = NaiveDate::parse_from_str(&String::from(&record[0]), "%Y/%m/%d")?;
+        let dt = NaiveDate::parse_from_str(&String::from(&record[0]), "%Y/%m/%d")
+            .context("Failed to parse date from CSV. The date format in the source data might have changed.")?;
         writeln!(
             &mut writer,
             "(\"{}\", \"{}\"),",
             dt.format("%Y-%m-%d"),
             &record[1]
-        )?;
+        )
+        .context("Failed to write holiday data to file.")?;
     }
-    write!(&mut writer, "{footer}")?;
-    writer.flush()?;
+    write!(&mut writer, "{footer}")
+        .context("Failed to write file footer.")?;
+    writer.flush()
+        .context("Failed to flush data to file. Data might be incomplete.")?;
 
     Ok(())
 }

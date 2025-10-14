@@ -30,7 +30,7 @@ fn parse_date_flexible(date_str: &str) -> Result<NaiveDate> {
         return Ok(date);
     }
     
-    Err(anyhow!("Unable to parse date '{}'. Supported formats: YYYYMMDD, YYYY-MM-DD, YYYY/MM/DD, YYYY年MM月DD日, MM/DD/YYYY, DD/MM/YYYY, YYYY.MM.DD", date_str))
+    Err(anyhow!("Invalid date format: '{}'. Please use one of these formats: YYYYMMDD, YYYY-MM-DD, YYYY/MM/DD, YYYY年MM月DD日, MM/DD/YYYY, DD/MM/YYYY, or YYYY.MM.DD", date_str))
 }
 
 #[cfg(test)]
@@ -108,7 +108,7 @@ pub fn get_holiday(opt: &CliOption) -> Result<(bool, &'static str)> {
             Err(_) => {
                 // Fallback to the specified format
                 NaiveDate::parse_from_str(&opt.date, &opt.date_format)
-                    .map_err(|e| anyhow!("Failed to parse date '{}' with format '{}': {}", opt.date, opt.date_format, e))?
+                    .map_err(|e| anyhow!("Could not parse date '{}' using format '{}'. Error: {}. Try using a different date format or check the --help for supported formats.", opt.date, opt.date_format, e))?
                     .format("%Y-%m-%d")
                     .to_string()
             }

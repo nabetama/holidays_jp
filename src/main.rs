@@ -23,7 +23,7 @@
 
 pub mod holiday;
 
-use anyhow::Result;
+use anyhow::{Result, Context};
 use std::{io::Write, process, str};
 
 use clap::{arg, command, value_parser, ValueEnum};
@@ -35,6 +35,31 @@ use crate::holiday::generator::generate;
 
 const CSV_FILE_URL: &str = "https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv";
 const OUT_FILE: &str = "./src/holiday/dates.rs";
+
+/// Print user-friendly error message with usage examples
+fn print_error_with_help(error: &anyhow::Error) {
+    eprintln!("❌ Error: {}", error);
+    
+    // Add specific help based on error type
+    if error.downcast_ref::<chrono::format::ParseError>().is_some() {
+        eprintln!("\n💡 Date parsing help:");
+        eprintln!("   Supported formats: YYYYMMDD, YYYY-MM-DD, YYYY/MM/DD, YYYY年MM月DD日");
+        eprintln!("   Examples:");
+        eprintln!("     ./holidays_jp -d 2023-01-01");
+        eprintln!("     ./holidays_jp -d 2023/01/01");
+        eprintln!("     ./holidays_jp -d 2023年1月1日");
+        eprintln!("     ./holidays_jp -d 20230101");
+    } else if error.downcast_ref::<serde_json::Error>().is_some() {
+        eprintln!("\n💡 JSON output error:");
+        eprintln!("   This might be due to invalid JSON serialization.");
+        eprintln!("   Try using a different output format: -o human");
+    } else if error.downcast_ref::<std::io::Error>().is_some() {
+        eprintln!("\n💡 I/O error:");
+        eprintln!("   Check if you have write permissions and sufficient disk space.");
+    }
+    
+    eprintln!("\n📖 For more help, run: ./holidays_jp --help");
+}
 
 #[derive(Debug, Clone, ValueEnum)]
 enum OutputFormat {
@@ -103,7 +128,14 @@ impl CliOption {
     }
 }
 
-fn main() -> Result<()> {
+fn main() {
+    if let Err(error) = run() {
+        print_error_with_help(&error);
+        process::exit(1);
+    }
+}
+
+fn run() -> Result<()> {
     let matches = command!("holidays_jp")
         .version("1.0")
         .author("Mao Nabeta")
@@ -155,14 +187,18 @@ fn main() -> Result<()> {
     };
 
     if opt.gen {
-        generate(CSV_FILE_URL, OUT_FILE)?;
-        println!("generate process is done");
-        process::exit(0x0100);
+        println!("🔄 Generating holiday data from official source...");
+        generate(CSV_FILE_URL, OUT_FILE)
+            .context("Failed to generate holiday data. Please check your internet connection and try again.")?;
+        println!("✅ Holiday data generation completed successfully!");
+        return Ok(());
     }
 
-    let (is_holiday, name) = get_holiday(&opt)?;
+    let (is_holiday, name) = get_holiday(&opt)
+        .context("Failed to check holiday status. Please verify your date format.")?;
 
-    opt.write_result(&mut std::io::stdout(), is_holiday, if name.is_empty() { None } else { Some(name) })?;
+    opt.write_result(&mut std::io::stdout(), is_holiday, if name.is_empty() { None } else { Some(name) })
+        .context("Failed to write output. Please check your terminal settings.")?;
 
     Ok(())
 }
