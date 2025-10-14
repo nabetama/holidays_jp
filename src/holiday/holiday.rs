@@ -1,5 +1,3 @@
-use anyhow::Result;
-
 use chrono::{Local, NaiveDate};
 
 use crate::CliOption;
@@ -11,7 +9,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_get_holiday() -> Result<()> {
+    fn test_get_holiday() -> Result<(), Box<dyn std::error::Error>> {
         let opt = CliOption {
             date: "20230101".to_string(),
             gen: false,
@@ -27,7 +25,7 @@ mod tests {
     }
 
     #[test]
-    fn test_get_holiday_is_not_holiday() -> Result<()> {
+    fn test_get_holiday_is_not_holiday() -> Result<(), Box<dyn std::error::Error>> {
         let opt = CliOption {
             date: "2023/02/02".to_string(),
             gen: false,
