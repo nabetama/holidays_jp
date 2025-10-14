@@ -1,5 +1,5 @@
 use chrono::{Local, NaiveDate};
-use anyhow::{Result, anyhow};
+use anyhow::{Result, anyhow, Context};
 
 use crate::CliOption;
 
@@ -93,6 +93,41 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    fn test_get_holidays_in_range() -> Result<(), Box<dyn std::error::Error>> {
+        let holidays = get_holidays_in_range("2023-01-01", "2023-01-03")?;
+        
+        // Should find 元日 (New Year's Day) on 2023-01-01
+        assert!(!holidays.is_empty());
+        assert_eq!(holidays[0].0, "2023-01-01");
+        assert_eq!(holidays[0].1, "元日");
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_get_holidays_in_range_empty() -> Result<(), Box<dyn std::error::Error>> {
+        let holidays = get_holidays_in_range("2023-02-02", "2023-02-05")?;
+        
+        // Should find no holidays in this range
+        assert!(holidays.is_empty());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_get_holidays_in_range_invalid_dates() -> Result<(), Box<dyn std::error::Error>> {
+        // Test with invalid date format
+        let result = get_holidays_in_range("invalid-date", "2023-01-01");
+        assert!(result.is_err());
+
+        // Test with start date after end date
+        let result = get_holidays_in_range("2023-12-31", "2023-01-01");
+        assert!(result.is_err());
+
+        Ok(())
+    }
 }
 
 pub fn get_holiday(opt: &CliOption) -> Result<(bool, &'static str)> {
@@ -119,4 +154,31 @@ pub fn get_holiday(opt: &CliOption) -> Result<(bool, &'static str)> {
         Some(name) => Ok((true, name)),
         None => Ok((false, "")),
     }
+}
+
+/// Get all holidays in a date range
+pub fn get_holidays_in_range(start_date: &str, end_date: &str) -> Result<Vec<(String, &'static str)>> {
+    let start = parse_date_flexible(start_date)
+        .context("Failed to parse start date")?;
+    let end = parse_date_flexible(end_date)
+        .context("Failed to parse end date")?;
+    
+    if start > end {
+        return Err(anyhow!("Start date must be before or equal to end date"));
+    }
+    
+    let holidays = dates::dates();
+    let mut result = Vec::new();
+    
+    let mut current = start;
+    while current <= end {
+        let date_str = current.format("%Y-%m-%d").to_string();
+        if let Some(holiday_name) = holidays.get(date_str.as_str()) {
+            result.push((date_str, *holiday_name));
+        }
+        current = current.succ_opt()
+            .ok_or_else(|| anyhow!("Date overflow occurred"))?;
+    }
+    
+    Ok(result)
 }

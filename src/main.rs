@@ -27,7 +27,7 @@ use anyhow::{Result, Context};
 use std::{io::Write, process, str};
 
 use clap::{arg, command, value_parser, ValueEnum, Subcommand};
-use holiday::holiday::get_holiday;
+use holiday::holiday::{get_holiday, get_holidays_in_range};
 use chrono::Local;
 use serde_json;
 
@@ -253,7 +253,7 @@ fn run() -> Result<()> {
         Some(("list", sub_matches)) => {
             let start = sub_matches.get_one::<String>("start");
             let end = sub_matches.get_one::<String>("end");
-            let _output_format = sub_matches.get_one::<OutputFormat>("output").unwrap().clone();
+            let output_format = sub_matches.get_one::<OutputFormat>("output").unwrap().clone();
             
             if start.is_none() || end.is_none() {
                 eprintln!("❌ Error: Both --start and --end dates are required for list command");
@@ -261,8 +261,59 @@ fn run() -> Result<()> {
                 return Ok(());
             }
             
-            eprintln!("⚠️  List command is not yet implemented. This is a placeholder for future functionality.");
-            eprintln!("💡 For now, use: ./holidays_jp check --date <DATE>");
+            let start_date = start.unwrap();
+            let end_date = end.unwrap();
+            
+            let holidays = get_holidays_in_range(start_date, end_date)
+                .context("Failed to get holidays in range. Please check your date formats.")?;
+            
+            if holidays.is_empty() {
+                match output_format {
+                    OutputFormat::Human => {
+                        println!("No holidays found in the specified range ({} to {})", start_date, end_date);
+                    }
+                    OutputFormat::Json => {
+                        let result = serde_json::json!({
+                            "start_date": start_date,
+                            "end_date": end_date,
+                            "holidays": []
+                        });
+                        println!("{}", serde_json::to_string_pretty(&result)?);
+                    }
+                    OutputFormat::Quiet => {
+                        // No output for quiet mode when no holidays found
+                    }
+                }
+            } else {
+                match output_format {
+                    OutputFormat::Human => {
+                        println!("Holidays in range ({} to {}):", start_date, end_date);
+                        for (date, name) in holidays {
+                            println!("  {} - {}", date, name);
+                        }
+                    }
+                    OutputFormat::Json => {
+                        let holiday_list: Vec<HolidayResult> = holidays.into_iter()
+                            .map(|(date, name)| HolidayResult {
+                                date,
+                                is_holiday: true,
+                                holiday_name: Some(name.to_string()),
+                            })
+                            .collect();
+                        let result = serde_json::json!({
+                            "start_date": start_date,
+                            "end_date": end_date,
+                            "holidays": holiday_list
+                        });
+                        println!("{}", serde_json::to_string_pretty(&result)?);
+                    }
+                    OutputFormat::Quiet => {
+                        for (date, name) in holidays {
+                            println!("{} - {}", date, name);
+                        }
+                    }
+                }
+            }
         }
         None => {
             // Default behavior: check today's date
