@@ -14,7 +14,7 @@
 //! Usage: holidays_jp [OPTIONS]
 //!
 //! Options:
-//!   -d, --date <DATE>               a date string, such as 20230211 (%Y%m%d) [default: ]
+//!   -d, --date <DATE>               a date string, such as 20230211 (%Y%m%d) [default: today]
 //!   -g, --gen <BOOL>                generates a new Japanese national holidays data [possible values: true, false]
 //!   -f, --dateformat <DATE_FORMAT>  Specify the date format to pass as a command line argument [default: %Y%m%d]
 //!   -h, --help                      Print help
@@ -28,11 +28,13 @@ use std::{io::Write, process, str};
 
 use clap::{arg, command, value_parser};
 use holiday::holiday::get_holiday;
+use chrono::Local;
 
 use crate::holiday::generator::generate;
 
 const CSV_FILE_URL: &str = "https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv";
 const OUT_FILE: &str = "./src/holiday/dates.rs";
+
 
 /// A struct with command line arguments for CLI
 ///
@@ -68,8 +70,7 @@ fn main() -> Result<()> {
         .arg(
             arg!(--date <DATE>)
                 .required(false)
-                .default_value("")
-                .help("a date string, such as 20230211 (%Y%m%d)")
+                .help("a date string, such as 20230211 (%Y%m%d) [default: today]")
                 .short('d'),
         )
         .arg(
@@ -90,7 +91,9 @@ fn main() -> Result<()> {
         )
         .get_matches();
 
-    let date = matches.get_one::<String>("date").unwrap().to_string();
+    let date = matches.get_one::<String>("date")
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| Local::now().format("%Y%m%d").to_string());
     let gen = matches.get_one::<bool>("gen").is_some();
     let date_format = matches.get_one::<String>("dateformat").unwrap().to_string();
 
