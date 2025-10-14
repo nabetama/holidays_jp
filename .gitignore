@@ -1,3 +1,9 @@
 /target
 
 .DS_Store
+
+# User-specific configuration (auto-generated from constants.rs defaults)
+config.toml
+
+# Runtime cache (auto-downloaded from official source)
+data/

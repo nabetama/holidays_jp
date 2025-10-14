@@ -20,7 +20,9 @@
 
 ## Data Source
 
-The holiday data is based on the official [CSV file](https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv) provided by the Cabinet Office of Japan. The data is automatically updated once a week via [GitHub Actions](https://github.com/nabetama/holidays_jp/actions/workflows/scheduler.yml), ensuring you always have the latest holiday information.
+The holiday data is based on the official CSV file provided by the Cabinet Office of Japan. The data is automatically updated once a week via [GitHub Actions](https://github.com/nabetama/holidays_jp/actions/workflows/scheduler.yml), ensuring you always have the latest holiday information.
+
+> **Note**: The data source URL is configurable via `config.toml`. See the configuration section for details.
 
 ## Installation
 
@@ -44,13 +46,9 @@ If your PC is connected to the Internet, you can obtain the latest Japanese nati
 
 ```sh
 $ cargo run -- update
-$ cargo fmt # dont't have to do it
 ```
 
-## Usage
-
-### Basic Commands
-
+##
 ```sh
 # Check today's date (default behavior)
 $ ./holidays_jp
@@ -149,6 +147,48 @@ The tool automatically detects and supports various date formats:
 - **human** (default): Human-readable format with clear messages
 - **json**: Structured JSON output for programmatic use
 - **quiet**: Minimal output showing only holiday names
+
+## Configuration
+
+The application automatically generates a `config.toml` file on first run with default settings. You can customize this file to fit your needs.
+
+### Configuration File Location
+
+- **Auto-generated**: `config.toml` (created automatically on first run)
+- **Example/Template**: `config.toml.example` (reference configuration with detailed comments)
+
+### Configuration Options
+
+```toml
+[holiday_data]
+# Data source URL (configurable)
+source_url = "https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv"
+# Cache file location
+cache_file = "./data/holidays.json"
+
+[cache]
+# Cache strategy: TimeBased, EtagBased, Hybrid, AlwaysRefresh, NeverRefresh
+strategy = "Hybrid"
+# Maximum cache age in hours (default: 168 = 7 days)
+max_age_hours = 168
+# ETag check interval in hours (default: 24 = 1 day)
+etag_check_interval_hours = 24
+# Force refresh on startup
+force_refresh_on_startup = false
+```
+
+> **Note**: All default configuration values are defined in `src/constants.rs`. When you first run the application, it will create `config.toml` with these defaults. You can then modify `config.toml` to customize the behavior without changing the source code.
+
+### Custom Data Sources
+
+You can use custom holiday data sources by modifying the `source_url` in `config.toml`. The CSV format should match the official format:
+
+```csv
+日付,祝日名
+2023/1/1,元日
+2023/1/2,休日
+...
+```
 
 ## License
 
