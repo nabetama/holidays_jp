@@ -32,7 +32,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-holidays_jp = "0.2"
+holidays_jp = "0.3"
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
 ```
 
