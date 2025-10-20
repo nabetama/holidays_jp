@@ -84,8 +84,6 @@ fn main() {
 
 #[tokio::main]
 async fn run() -> Result<()> {
-    let config = config::Config::load()?;
-
     let matches = command!(env!("CARGO_PKG_NAME"))
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
@@ -93,6 +91,13 @@ async fn run() -> Result<()> {
         .long_about("holidays_jp is a command-line tool that helps you check if specific dates are Japanese national holidays. It supports multiple date formats, various output formats, and can list holidays within a date range. The holiday data is based on the official CSV file provided by the Cabinet Office of Japan.")
         .subcommand_required(false)
         .arg_required_else_help(false)
+        .arg(
+            arg!(-v --verbose)
+                .help("Enable verbose output")
+                .long_help("Display detailed configuration information and processing steps")
+                .global(true)
+                .action(clap::ArgAction::SetTrue),
+        )
         .subcommand(
             command!("check")
                 .about("Check if a specific date is a holiday (default)")
@@ -148,7 +153,18 @@ async fn run() -> Result<()> {
                         .short('o'),
                 ),
         )
+        .subcommand(
+            command!("info")
+                .about("Display configuration information")
+                .long_about("Display the current configuration settings including data source URL, cache file location, and cache strategy."),
+        )
         .get_matches();
+
+    // Check if verbose flag is set
+    let verbose = matches.get_flag("verbose");
+
+    // Load configuration with verbosity setting
+    let config = config::Config::load_with_verbosity(verbose)?;
 
     // 祝日サービスを初期化
     let mut holiday_service = HolidayService::new(config.clone());
@@ -156,6 +172,17 @@ async fn run() -> Result<()> {
         .context("Failed to initialize holiday service. Please check your internet connection and try again.")?;
 
     match matches.subcommand() {
+        Some(("info", _)) => {
+            // Display configuration with verbose output
+            println!("📄 Configuration Information");
+            println!("   Source URL: {}", config.holiday_data.source_url);
+            println!("   Cache file: {}", config.holiday_data.cache_file);
+            println!("   Cache strategy: {:?}", config.cache.strategy);
+            println!("   Max cache age: {} hours", config.cache.max_age_hours);
+            println!("   ETag check interval: {} hours", config.cache.etag_check_interval_hours);
+            println!("   Force refresh on startup: {}", config.cache.force_refresh_on_startup);
+            return Ok(());
+        }
         Some(("check", sub_matches)) => {
             // Check positional argument first, then fall back to --date option
             let date = sub_matches

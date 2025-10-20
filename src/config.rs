@@ -49,27 +49,39 @@ impl Default for Config {
 
 impl Config {
     pub fn load() -> anyhow::Result<Self> {
+        Self::load_with_verbosity(false)
+    }
+
+    pub fn load_with_verbosity(verbose: bool) -> anyhow::Result<Self> {
         // 設定ファイルがあれば読み込み、なければデフォルト設定ファイルを生成
         if std::path::Path::new(CONFIG_FILE_NAME).exists() {
-            println!("📄 Loading configuration from config.toml");
+            if verbose {
+                println!("📄 Loading configuration from config.toml");
+            }
             let content = std::fs::read_to_string(CONFIG_FILE_NAME)?;
             let config: Config = toml::from_str(&content)?;
-            println!("   Source URL: {}", config.holiday_data.source_url);
-            println!("   Cache file: {}", config.holiday_data.cache_file);
-            println!("   Cache strategy: {:?}", config.cache.strategy);
+            if verbose {
+                println!("   Source URL: {}", config.holiday_data.source_url);
+                println!("   Cache file: {}", config.holiday_data.cache_file);
+                println!("   Cache strategy: {:?}", config.cache.strategy);
+            }
             Ok(config)
         } else {
-            println!("📄 Creating default config.toml file");
-            Self::create_default_config_file()?;
+            if verbose {
+                println!("📄 Creating default config.toml file");
+            }
+            Self::create_default_config_file(verbose)?;
             Ok(Config::default())
         }
     }
 
-    fn create_default_config_file() -> anyhow::Result<()> {
+    fn create_default_config_file(verbose: bool) -> anyhow::Result<()> {
         let default_config = Config::default();
         let toml_content = toml::to_string_pretty(&default_config)?;
         std::fs::write(CONFIG_FILE_NAME, toml_content)?;
-        println!("✅ Created default config.toml file");
+        if verbose {
+            println!("✅ Created default config.toml file");
+        }
         Ok(())
     }
 }
