@@ -21,12 +21,12 @@
 //!   -V, --version                   Print version
 //! ```
 
-pub mod config;
 pub mod cache;
-pub mod holiday_service;
+pub mod config;
 pub mod constants;
+pub mod holiday_service;
 
-use anyhow::{Result, Context};
+use anyhow::{Context, Result};
 use std::{io::Write, process, str};
 
 use clap::{arg, command, value_parser, ValueEnum};
@@ -36,7 +36,7 @@ use serde_json;
 /// Print user-friendly error message with usage examples
 fn print_error_with_help(error: &anyhow::Error) {
     eprintln!("❌ Error: {}", error);
-    
+
     // Add specific help based on error type
     if error.downcast_ref::<chrono::format::ParseError>().is_some() {
         eprintln!("\n💡 Date parsing help:");
@@ -54,7 +54,7 @@ fn print_error_with_help(error: &anyhow::Error) {
         eprintln!("\n💡 I/O error:");
         eprintln!("   Check if you have write permissions and sufficient disk space.");
     }
-    
+
     eprintln!("\n📖 For more help, run: ./holidays_jp --help");
 }
 
@@ -151,12 +151,17 @@ async fn run() -> Result<()> {
 
     match matches.subcommand() {
         Some(("check", sub_matches)) => {
-            let date = sub_matches.get_one::<String>("date")
+            let date = sub_matches
+                .get_one::<String>("date")
                 .map(|s| s.to_string())
                 .unwrap_or_else(|| HolidayService::get_today_date());
-            let output_format = sub_matches.get_one::<OutputFormat>("output").unwrap().clone();
+            let output_format = sub_matches
+                .get_one::<OutputFormat>("output")
+                .unwrap()
+                .clone();
 
-            let (is_holiday, holiday_name) = holiday_service.get_holiday(&date)
+            let (is_holiday, holiday_name) = holiday_service
+                .get_holiday(&date)
                 .context("Failed to check holiday status. Please verify your date format.")?;
 
             write_holiday_result(&date, is_holiday, holiday_name.as_deref(), output_format)?;
@@ -176,29 +181,39 @@ async fn run() -> Result<()> {
         Some(("list", sub_matches)) => {
             let start = sub_matches.get_one::<String>("start");
             let end = sub_matches.get_one::<String>("end");
-            let output_format = sub_matches.get_one::<OutputFormat>("output").unwrap().clone();
-            
+            let output_format = sub_matches
+                .get_one::<OutputFormat>("output")
+                .unwrap()
+                .clone();
+
             if start.is_none() || end.is_none() {
                 eprintln!("❌ Error: Both --start and --end dates are required for list command");
                 eprintln!("💡 Example: ./holidays_jp list --start 2023-01-01 --end 2023-12-31");
                 return Ok(());
             }
-            
+
             let start_date = start.unwrap();
             let end_date = end.unwrap();
-            
-            let holidays = holiday_service.get_holidays_in_range(start_date, end_date)
+
+            let holidays = holiday_service
+                .get_holidays_in_range(start_date, end_date)
                 .context("Failed to get holidays in range. Please check your date formats.")?;
-            
+
             write_holidays_list(start_date, end_date, &holidays, output_format)?;
         }
         None => {
             // Default behavior: check today's date
             let today = HolidayService::get_today_date();
-            let (is_holiday, holiday_name) = holiday_service.get_holiday(&today)
+            let (is_holiday, holiday_name) = holiday_service
+                .get_holiday(&today)
                 .context("Failed to check holiday status. Please verify your date format.")?;
 
-            write_holiday_result(&today, is_holiday, holiday_name.as_deref(), OutputFormat::Human)?;
+            write_holiday_result(
+                &today,
+                is_holiday,
+                holiday_name.as_deref(),
+                OutputFormat::Human,
+            )?;
         }
         _ => unreachable!(),
     }
@@ -207,15 +222,20 @@ async fn run() -> Result<()> {
 }
 
 fn write_holiday_result(
-    date: &str, 
-    is_holiday: bool, 
-    holiday_name: Option<&str>, 
-    output_format: OutputFormat
+    date: &str,
+    is_holiday: bool,
+    holiday_name: Option<&str>,
+    output_format: OutputFormat,
 ) -> Result<()> {
     match output_format {
         OutputFormat::Human => {
             if is_holiday {
-                writeln!(std::io::stdout(), "{} is holiday({})", date, holiday_name.unwrap_or(""))?;
+                writeln!(
+                    std::io::stdout(),
+                    "{} is holiday({})",
+                    date,
+                    holiday_name.unwrap_or("")
+                )?;
             } else {
                 writeln!(std::io::stdout(), "{} is not a holiday", date)?;
             }
@@ -247,7 +267,10 @@ fn write_holidays_list(
     if holidays.is_empty() {
         match output_format {
             OutputFormat::Human => {
-                println!("No holidays found in the specified range ({} to {})", start_date, end_date);
+                println!(
+                    "No holidays found in the specified range ({} to {})",
+                    start_date, end_date
+                );
             }
             OutputFormat::Json => {
                 let result = serde_json::json!({
@@ -270,7 +293,8 @@ fn write_holidays_list(
                 }
             }
             OutputFormat::Json => {
-                let holiday_list: Vec<HolidayResult> = holidays.iter()
+                let holiday_list: Vec<HolidayResult> = holidays
+                    .iter()
                     .map(|(date, name)| HolidayResult {
                         date: date.clone(),
                         is_holiday: true,

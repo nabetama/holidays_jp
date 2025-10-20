@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::constants::*;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
@@ -39,8 +39,8 @@ impl Default for Config {
             },
             cache: CacheConfig {
                 strategy: CacheStrategy::Hybrid,
-                max_age_hours: 168,  // 7 days - aligns with weekly GitHub Actions updates
-                etag_check_interval_hours: 24,  // Daily ETag check for emergency updates
+                max_age_hours: 168, // 7 days - aligns with weekly GitHub Actions updates
+                etag_check_interval_hours: 24, // Daily ETag check for emergency updates
                 force_refresh_on_startup: false,
             },
         }
@@ -64,7 +64,7 @@ impl Config {
             Ok(Config::default())
         }
     }
-    
+
     fn create_default_config_file() -> anyhow::Result<()> {
         let default_config = Config::default();
         let toml_content = toml::to_string_pretty(&default_config)?;
