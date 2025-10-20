@@ -19,7 +19,7 @@ jobs:
       - name: commit & push changes
         env:
           CI_COMMIT_AUTHOR: github-actions
-          CI_COMMIT_MESSAGE: update dates.rs from github action
+          CI_COMMIT_MESSAGE: update holiday cache data from github action
         uses: actions-js/push@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
