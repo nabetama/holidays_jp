@@ -53,21 +53,32 @@ cargo run -- update
 holidays_jp
 20251014 is not a holiday
 
-# Check a specific date
+# Check a specific date (with -d option)
 holidays_jp check -d 20220101
 20220101 is holiday(元日)
 
+# Check a specific date (positional argument, no -d required)
+holidays_jp check 20220101
+20220101 is holiday(元日)
+
 # Check with different date format
-holidays_jp check -d 2022/01/01
+holidays_jp check 2022/01/01
 2022/01/01 is holiday(元日)
 
 # JSON output for scripting
-holidays_jp check -d 2022-01-01 -o json
+holidays_jp check 2022-01-01 -o json
 {"date":"2022-01-01","is_holiday":true,"holiday_name":"元日"}
 
 # Quiet output (holiday name only)
-holidays_jp check -d 2022-01-01 -o quiet
+holidays_jp check 2022-01-01 -o quiet
 元日
+
+# Verbose output with additional information
+holidays_jp check 2022-01-01 -v
+Checking date: 2022-01-01
+Configuration loaded successfully
+Holiday data loaded: 123 holidays
+2022-01-01 is holiday(元日)
 ```
 
 ### List Holidays in a Range
