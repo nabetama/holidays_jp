@@ -1,5 +1,5 @@
-use crate::config::{Config, CacheStrategy};
-use anyhow::{Result, Context};
+use crate::config::{CacheStrategy, Config};
+use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
 use reqwest;
 use serde::{Deserialize, Serialize};
@@ -32,7 +32,11 @@ impl HolidayCache {
             .timeout(std::time::Duration::from_secs(30))
             .build()
             .expect("Failed to create HTTP client");
-        Self { config, cache_path, http_client }
+        Self {
+            config,
+            cache_path,
+            http_client,
+        }
     }
 
     pub async fn get_holidays(&self) -> Result<HashMap<String, String>> {
@@ -54,12 +58,12 @@ impl HolidayCache {
     }
 
     fn load_cache_data(&self) -> Result<CacheData> {
-        let content = std::fs::read_to_string(&self.cache_path)
-            .context("Failed to read cache file")?;
-        
-        let cache_data: CacheData = serde_json::from_str(&content)
-            .context("Failed to parse cache file")?;
-        
+        let content =
+            std::fs::read_to_string(&self.cache_path).context("Failed to read cache file")?;
+
+        let cache_data: CacheData =
+            serde_json::from_str(&content).context("Failed to parse cache file")?;
+
         Ok(cache_data)
     }
 
@@ -85,12 +89,8 @@ impl HolidayCache {
         }
 
         match self.check_remote_etag().await {
-            Ok(Some(remote_etag)) => {
-                Ok(metadata.etag.as_ref() != Some(&remote_etag))
-            }
-            Ok(None) | Err(_) => {
-                self.should_refresh_time_based(metadata)
-            }
+            Ok(Some(remote_etag)) => Ok(metadata.etag.as_ref() != Some(&remote_etag)),
+            Ok(None) | Err(_) => self.should_refresh_time_based(metadata),
         }
     }
 
@@ -126,14 +126,16 @@ impl HolidayCache {
     }
 
     async fn check_remote_etag(&self) -> Result<Option<String>> {
-        let response = self.http_client
+        let response = self
+            .http_client
             .head(&self.config.holiday_data.source_url)
             .timeout(std::time::Duration::from_secs(10))
             .send()
             .await?;
 
         if response.status().is_success() {
-            let etag = response.headers()
+            let etag = response
+                .headers()
                 .get("etag")
                 .and_then(|h| h.to_str().ok())
                 .map(|s| s.to_string());
@@ -145,16 +147,21 @@ impl HolidayCache {
     }
 
     async fn download_and_cache(&self) -> Result<HashMap<String, String>> {
-        let response = self.http_client
+        let response = self
+            .http_client
             .get(&self.config.holiday_data.source_url)
             .send()
             .await?;
 
         if !response.status().is_success() {
-            return Err(anyhow::anyhow!("Failed to download data: {}", response.status()));
+            return Err(anyhow::anyhow!(
+                "Failed to download data: {}",
+                response.status()
+            ));
         }
 
-        let etag = response.headers()
+        let etag = response
+            .headers()
             .get("etag")
             .and_then(|h| h.to_str().ok())
             .map(|s| s.to_string());
@@ -193,7 +200,7 @@ impl HolidayCache {
             if record.len() >= 2 {
                 let date_str = &record[0];
                 let holiday_name = &record[1];
-                
+
                 // 日付を YYYY-MM-DD 形式に変換
                 if let Ok(date) = chrono::NaiveDate::parse_from_str(date_str, "%Y/%m/%d") {
                     let formatted_date = date.format("%Y-%m-%d").to_string();

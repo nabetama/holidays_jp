@@ -1,5 +1,5 @@
 //! Minimal constants that are truly constant and not configuration values
-//! 
+//!
 //! These are values that should never change and don't belong in config files.
 //! All user-configurable values are defined in config.toml.
 
@@ -8,19 +8,19 @@ pub const CONFIG_FILE_NAME: &str = "config.toml";
 
 /// Supported date formats for flexible parsing (technical implementation detail)
 pub const SUPPORTED_DATE_FORMATS: &[&str] = &[
-    "%Y%m%d",        // 20230101
-    "%Y-%m-%d",      // 2023-01-01
-    "%Y/%m/%d",      // 2023/01/01
-    "%Y年%m月%d日",   // 2023年1月1日
-    "%m/%d/%Y",      // 01/01/2023
-    "%d/%m/%Y",      // 01/01/2023 (European format)
-    "%Y.%m.%d",      // 2023.01.01
+    "%Y%m%d",       // 20230101
+    "%Y-%m-%d",     // 2023-01-01
+    "%Y/%m/%d",     // 2023/01/01
+    "%Y年%m月%d日", // 2023年1月1日
+    "%m/%d/%Y",     // 01/01/2023
+    "%d/%m/%Y",     // 01/01/2023 (European format)
+    "%Y.%m.%d",     // 2023.01.01
 ];
 
 /// Valid cache strategy options (for validation)
 pub const CACHE_STRATEGY_OPTIONS: &[&str] = &[
     "TimeBased",
-    "EtagBased", 
+    "EtagBased",
     "Hybrid",
     "AlwaysRefresh",
     "NeverRefresh",

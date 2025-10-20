@@ -24,7 +24,9 @@ impl HolidayService {
     }
 
     pub fn get_holiday(&self, date: &str) -> Result<(bool, Option<String>)> {
-        let holidays = self.holidays.as_ref()
+        let holidays = self
+            .holidays
+            .as_ref()
             .ok_or_else(|| anyhow::anyhow!("Holiday service not initialized"))?;
 
         let parsed_date = self.parse_date_flexible(date)?;
@@ -37,29 +39,38 @@ impl HolidayService {
         }
     }
 
-    pub fn get_holidays_in_range(&self, start_date: &str, end_date: &str) -> Result<Vec<(String, String)>> {
-        let holidays = self.holidays.as_ref()
+    pub fn get_holidays_in_range(
+        &self,
+        start_date: &str,
+        end_date: &str,
+    ) -> Result<Vec<(String, String)>> {
+        let holidays = self
+            .holidays
+            .as_ref()
             .ok_or_else(|| anyhow::anyhow!("Holiday service not initialized"))?;
 
         let start = self.parse_date_flexible(start_date)?;
         let end = self.parse_date_flexible(end_date)?;
-        
+
         if start > end {
-            return Err(anyhow::anyhow!("Start date must be before or equal to end date"));
+            return Err(anyhow::anyhow!(
+                "Start date must be before or equal to end date"
+            ));
         }
-        
+
         let mut result = Vec::new();
         let mut current = start;
-        
+
         while current <= end {
             let date_str = current.format("%Y-%m-%d").to_string();
             if let Some(holiday_name) = holidays.get(&date_str) {
                 result.push((date_str, holiday_name.clone()));
             }
-            current = current.succ_opt()
+            current = current
+                .succ_opt()
                 .ok_or_else(|| anyhow::anyhow!("Date overflow occurred"))?;
         }
-        
+
         Ok(result)
     }
 
@@ -69,7 +80,7 @@ impl HolidayService {
                 return Ok(date);
             }
         }
-        
+
         Err(anyhow::anyhow!(
             "Invalid date format: '{}'. Please use one of these formats: YYYYMMDD, YYYY-MM-DD, YYYY/MM/DD, YYYY年MM月DD日, MM/DD/YYYY, DD/MM/YYYY, or YYYY.MM.DD", 
             date_str
@@ -98,7 +109,7 @@ mod tests {
     fn test_parse_date_flexible() {
         let config = Config::default();
         let service = HolidayService::new(config);
-        
+
         let test_cases = vec![
             ("2023-01-01", "2023-01-01"),
             ("2023/01/01", "2023-01-01"),
