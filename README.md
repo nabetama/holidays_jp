@@ -7,7 +7,7 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/4c244ed513f94b74b6dfa7302c710165)](https://www.codacy.com/gh/nabetama/holidays_jp/dashboard?utm_source=github.com&utm_medium=referral&utm_content=nabetama/holidays_jp&utm_campaign=Badge_Grade)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fnabetama%2Fholidays_jp.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fnabetama%2Fholidays_jp?ref=badge_shield)
 
-**holidays_jp** is a command-line tool for determining Japanese national holidays. It provides a simple and efficient way to check if specific dates are holidays, list holidays within date ranges, and manage holiday data.
+**holidays_jp** is both a Rust library and command-line tool for determining Japanese national holidays. It provides a simple and efficient way to check if specific dates are holidays, list holidays within date ranges, and manage holiday data.
 
 ## Features
 
@@ -26,7 +26,19 @@ The holiday data is based on the official CSV file provided by the Cabinet Offic
 
 ## Installation
 
-### From Source
+### As a Library
+
+Add this to your `Cargo.toml`:
+
+```toml
+[dependencies]
+holidays_jp = "0.2"
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+```
+
+### As a CLI Tool
+
+#### From Source
 
 ```bash
 git clone https://github.com/nabetama/holidays_jp.git
@@ -34,13 +46,62 @@ cd holidays_jp
 cargo build --release
 ```
 
-### Using Cargo
+#### Using Cargo
 
 ```bash
 cargo install holidays_jp
 ```
 
 ## Quick Start
+
+### Library Usage
+
+#### Check if a specific date is a holiday
+
+```rust
+use holidays_jp::{HolidayService, Config};
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Initialize the service with default configuration
+    let config = Config::default();
+    let mut service = HolidayService::new(config);
+    service.initialize().await?;
+
+    // Check if a specific date is a holiday
+    let (is_holiday, holiday_name) = service.get_holiday("2023-01-01")?;
+    if is_holiday {
+        println!("2023-01-01 is a holiday: {}", holiday_name.unwrap());
+    } else {
+        println!("2023-01-01 is not a holiday");
+    }
+
+    Ok(())
+}
+```
+
+#### List holidays in a date range
+
+```rust
+use holidays_jp::{HolidayService, Config};
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let config = Config::default();
+    let mut service = HolidayService::new(config);
+    service.initialize().await?;
+
+    // Get all holidays in 2023
+    let holidays = service.get_holidays_in_range("2023-01-01", "2023-12-31")?;
+    for (date, name) in holidays {
+        println!("{}: {}", date, name);
+    }
+
+    Ok(())
+}
+```
+
+### CLI Usage
 
 If your PC is connected to the Internet, you can obtain the latest Japanese national holiday data by executing the following command.
 

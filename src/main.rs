@@ -21,16 +21,12 @@
 //!   -V, --version                   Print version
 //! ```
 
-pub mod cache;
-pub mod config;
-pub mod constants;
-pub mod holiday_service;
+use holidays_jp::{config, holiday_service::HolidayService};
 
 use anyhow::{Context, Result};
 use std::{io::Write, process, str};
 
 use clap::{arg, command, value_parser, ValueEnum};
-use holiday_service::HolidayService;
 use serde_json;
 
 /// Print user-friendly error message with usage examples

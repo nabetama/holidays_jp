@@ -1,13 +1,21 @@
 [package]
 name = "holidays_jp"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 license = "MIT"
 authors = ["Mao Nabeta <mao.nabeta@gmail.com>"]
 description = "holidays_jp determines Japanese national holiday. The definition of holidays is based on csv file provided by the Cabinet Office."
 repository = "https://github.com/nabetama/holidays_jp"
 keywords = ["holilday", "Japan", "Japanese"]
-categories = ["command-line-utilities"]
+categories = ["command-line-utilities", "date-and-time"]
+
+[lib]
+name = "holidays_jp"
+path = "src/lib.rs"
+
+[[bin]]
+name = "holidays_jp"
+path = "src/main.rs"
 
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
