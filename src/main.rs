@@ -98,10 +98,16 @@ async fn run() -> Result<()> {
                 .about("Check if a specific date is a holiday (default)")
                 .long_about("Check whether a specific date is a Japanese national holiday. If no date is specified, today's date will be checked. Supports multiple date formats and output formats.")
                 .arg(
+                    arg!([DATE])
+                        .help("Date to check (default: today)")
+                        .long_help("The date to check for holidays. Supports various formats: YYYYMMDD, YYYY-MM-DD, YYYY/MM/DD, YYYY年MM月DD日, etc.")
+                )
+                .arg(
                     arg!(--date <DATE>)
                         .help("Date to check (default: today)")
                         .long_help("The date to check for holidays. Supports various formats: YYYYMMDD, YYYY-MM-DD, YYYY/MM/DD, YYYY年MM月DD日, etc.")
-                        .short('d'),
+                        .short('d')
+                        .conflicts_with("DATE"),
                 )
                 .arg(
                     arg!(--output <OUTPUT_FORMAT>)
@@ -151,8 +157,10 @@ async fn run() -> Result<()> {
 
     match matches.subcommand() {
         Some(("check", sub_matches)) => {
+            // Check positional argument first, then fall back to --date option
             let date = sub_matches
-                .get_one::<String>("date")
+                .get_one::<String>("DATE")
+                .or_else(|| sub_matches.get_one::<String>("date"))
                 .map(|s| s.to_string())
                 .unwrap_or_else(|| HolidayService::get_today_date());
             let output_format = sub_matches
