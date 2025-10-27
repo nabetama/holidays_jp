@@ -175,8 +175,14 @@ async fn run() -> Result<()> {
             println!("   Cache file: {}", config.holiday_data.cache_file);
             println!("   Cache strategy: {:?}", config.cache.strategy);
             println!("   Max cache age: {} hours", config.cache.max_age_hours);
-            println!("   ETag check interval: {} hours", config.cache.etag_check_interval_hours);
-            println!("   Force refresh on startup: {}", config.cache.force_refresh_on_startup);
+            println!(
+                "   ETag check interval: {} hours",
+                config.cache.etag_check_interval_hours
+            );
+            println!(
+                "   Force refresh on startup: {}",
+                config.cache.force_refresh_on_startup
+            );
             return Ok(());
         }
         Some(("check", sub_matches)) => {
